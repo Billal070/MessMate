@@ -20,24 +20,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.RiceBowl
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -65,7 +61,11 @@ import com.example.data.local.StudySessionEntity
 import com.example.ui.components.ConfirmDeleteDialog
 import com.example.ui.components.MessCard
 import com.example.ui.components.StatusPill
+import com.example.ui.components.WarmActionPill
+import com.example.ui.components.WarmIconBadge
+import com.example.ui.components.WarmTopBar
 import com.example.ui.components.localizedRiceTxType
+import com.example.ui.components.warmMeshBackground
 import com.example.ui.theme.LocalMessMateColors
 import com.example.ui.viewmodel.CalendarDayMarkers
 import com.example.ui.viewmodel.CalendarRecordsViewModel
@@ -79,7 +79,6 @@ import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CombinedCalendarScreen(
     calendarViewModel: CalendarRecordsViewModel,
@@ -92,44 +91,32 @@ fun CombinedCalendarScreen(
     val extraColors = LocalMessMateColors.current
     val today = calendarViewModel.timeProvider.today()
 
-    // Week starts on Saturday or Sunday; standard Sun..Sat layout
     val daysOfWeek = listOf(
         DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY,
         DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY
     )
 
     val firstOfMonth = selectedMonth.atDay(1)
-    val leadingBlanks = firstOfMonth.dayOfWeek.value % 7 // Sunday -> 0, Monday -> 1 ... Saturday -> 6
+    val leadingBlanks = firstOfMonth.dayOfWeek.value % 7
     val totalDays = selectedMonth.lengthOfMonth()
     val totalCells = ((leadingBlanks + totalDays + 6) / 7) * 7
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.calendar_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        }
-    ) { innerPadding ->
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .warmMeshBackground()
+    ) {
+        WarmTopBar(
+            title = stringResource(R.string.calendar_title),
+            onNavigateBack = onNavigateBack
+        )
+
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Month Navigator
+            // Month Navigator & Grid
             item {
                 MessCard {
                     Row(
@@ -137,48 +124,67 @@ fun CombinedCalendarScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(
+                        Surface(
                             onClick = { calendarViewModel.previousMonth() },
-                            modifier = Modifier.testTag("calendar_prev_month")
+                            shape = CircleShape,
+                            color = extraColors.surfaceLow,
+                            border = BorderStroke(1.dp, extraColors.divider),
+                            modifier = Modifier
+                                .size(40.dp)
+                                .testTag("calendar_prev_month")
                         ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                                contentDescription = "Previous month"
-                            )
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                                    contentDescription = "Previous month",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
+
                         Text(
                             text = Formatters.formatMonthYear(selectedMonth, locale),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.ExtraBold
                         )
-                        IconButton(
+
+                        Surface(
                             onClick = { calendarViewModel.nextMonth() },
-                            modifier = Modifier.testTag("calendar_next_month")
+                            shape = CircleShape,
+                            color = extraColors.surfaceLow,
+                            border = BorderStroke(1.dp, extraColors.divider),
+                            modifier = Modifier
+                                .size(40.dp)
+                                .testTag("calendar_next_month")
                         ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = "Next month"
-                            )
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = "Next month",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     // Weekday headers
                     Row(modifier = Modifier.fillMaxWidth()) {
                         daysOfWeek.forEach { dow ->
                             Text(
-                                text = dow.getDisplayName(TextStyle.SHORT, locale).take(3),
+                                text = dow.getDisplayName(TextStyle.SHORT, locale).take(3).uppercase(),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.ExtraBold,
                                 modifier = Modifier.weight(1f)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Calendar Grid
                     val rows = totalCells / 7
@@ -186,7 +192,7 @@ fun CombinedCalendarScreen(
                         for (row in 0 until rows) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
                                 for (col in 0 until 7) {
                                     val cellIndex = row * 7 + col
@@ -213,7 +219,7 @@ fun CombinedCalendarScreen(
                 }
             }
 
-            // Legend Card (Blue=Meal, Green=Study, Orange=Rice, Grey=No activity, OFF badge)
+            // Legend Card
             item {
                 MessCard {
                     Row(
@@ -225,10 +231,10 @@ fun CombinedCalendarScreen(
                         LegendDot(extraColors.studyGreen, stringResource(R.string.calendar_legend_study))
                         LegendDot(extraColors.riceOrange, stringResource(R.string.calendar_legend_rice))
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(24.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         LegendDot(extraColors.neutralGrey, stringResource(R.string.calendar_legend_none))
@@ -253,29 +259,29 @@ private fun CalendarDayCell(
 
     val borderColor = when {
         isToday -> MaterialTheme.colorScheme.primary
-        markers.isMealOffDay -> extraColors.danger.copy(alpha = 0.55f)
-        else -> extraColors.divider.copy(alpha = 0.6f)
+        markers.isMealOffDay -> extraColors.danger.copy(alpha = 0.45f)
+        else -> extraColors.divider
     }
 
     val bgColor = when {
-        isToday -> MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-        markers.isMealOffDay -> extraColors.danger.copy(alpha = 0.08f)
-        else -> extraColors.surfaceElevated.copy(alpha = 0.45f)
+        isToday -> extraColors.primarySoft
+        markers.isMealOffDay -> extraColors.dangerContainer
+        else -> extraColors.surfaceLow
     }
 
     Surface(
         modifier = modifier
-            .aspectRatio(0.92f)
-            .clip(RoundedCornerShape(10.dp))
+            .aspectRatio(0.90f)
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(12.dp),
         color = bgColor,
-        border = BorderStroke(if (isToday) 1.5.dp else 0.8.dp, borderColor)
+        border = BorderStroke(if (isToday) 1.6.dp else 1.dp, borderColor)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = 4.dp, horizontal = 2.dp),
+                .padding(vertical = 5.dp, horizontal = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -283,7 +289,7 @@ private fun CalendarDayCell(
                 text = dayNumber.toString(),
                 style = MaterialTheme.typography.labelMedium,
                 color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium
+                fontWeight = if (isToday) FontWeight.ExtraBold else FontWeight.Bold
             )
 
             if (markers.isMealOffDay) {
@@ -292,7 +298,7 @@ private fun CalendarDayCell(
                     fontSize = 8.sp,
                     lineHeight = 9.sp,
                     color = extraColors.danger,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.ExtraBold
                 )
             }
 
@@ -310,7 +316,7 @@ private fun CalendarDayCell(
                     MarkerDot(extraColors.riceOrange)
                 }
                 if (!hasAnyActivity && !markers.isMealOffDay) {
-                    MarkerDot(extraColors.neutralGrey.copy(alpha = 0.55f))
+                    MarkerDot(extraColors.neutralGrey.copy(alpha = 0.45f))
                 }
             }
         }
@@ -335,19 +341,19 @@ private fun LegendDot(color: Color, label: String) {
     ) {
         Box(
             modifier = Modifier
-                .size(8.dp)
+                .size(9.dp)
                 .clip(CircleShape)
                 .background(color)
         )
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.SemiBold
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateDetailScreen(
     dateIso: String,
@@ -423,42 +429,20 @@ fun DateDetailScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.calendar_day_detail_title),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = Formatters.formatDisplayDate(date, locale),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        }
-    ) { innerPadding ->
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .warmMeshBackground()
+    ) {
+        WarmTopBar(
+            title = stringResource(R.string.calendar_day_detail_title),
+            subtitle = Formatters.formatDisplayDate(date, locale),
+            onNavigateBack = onNavigateBack
+        )
+
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // 1. Meal Details & Historical Editing
@@ -469,22 +453,35 @@ fun DateDetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = stringResource(R.string.calendar_meal_section),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        val dinnerIsOn = detail.dinnerCycle?.isOn ?: true
-                        TextButton(
-                            onClick = { messViewModel.setCycleStatusForDate(date, !dinnerIsOn) },
-                            modifier = Modifier.testTag("date_detail_toggle_cycle")
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.weight(1f)
                         ) {
+                            WarmIconBadge(
+                                icon = Icons.Default.Restaurant,
+                                tint = MaterialTheme.colorScheme.primary,
+                                containerColor = extraColors.primarySoft,
+                                size = 36.dp,
+                                iconSize = 18.dp,
+                                cornerRadius = 11.dp
+                            )
                             Text(
-                                if (dinnerIsOn) stringResource(R.string.calendar_set_cycle_off)
-                                else stringResource(R.string.calendar_set_cycle_on)
+                                text = stringResource(R.string.calendar_meal_section),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
+                        val dinnerIsOn = detail.dinnerCycle?.isOn ?: true
+                        WarmActionPill(
+                            text = if (dinnerIsOn) stringResource(R.string.calendar_set_cycle_off)
+                            else stringResource(R.string.calendar_set_cycle_on),
+                            onClick = { messViewModel.setCycleStatusForDate(date, !dinnerIsOn) },
+                            modifier = Modifier.testTag("date_detail_toggle_cycle")
+                        )
                     }
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -492,17 +489,21 @@ fun DateDetailScreen(
                     ) {
                         val morningOn = detail.morningCycle?.isOn ?: true
                         val dinnerOn = detail.dinnerCycle?.isOn ?: true
+                        val onLabel = stringResource(R.string.meal_on)
+                        val offLabel = stringResource(R.string.meal_off)
                         StatusPill(
-                            text = "AM Cycle: ${if (morningOn) "ON" else "OFF"}",
-                            color = if (morningOn) extraColors.success else extraColors.danger
+                            text = stringResource(R.string.calendar_am_cycle_status, if (morningOn) onLabel else offLabel),
+                            color = if (morningOn) extraColors.success else extraColors.danger,
+                            containerColor = if (morningOn) extraColors.successContainer else extraColors.dangerContainer
                         )
                         StatusPill(
-                            text = "Dinner Cycle: ${if (dinnerOn) "ON" else "OFF"}",
-                            color = if (dinnerOn) extraColors.success else extraColors.danger
+                            text = stringResource(R.string.calendar_dinner_cycle_status, if (dinnerOn) onLabel else offLabel),
+                            color = if (dinnerOn) extraColors.success else extraColors.danger,
+                            containerColor = if (dinnerOn) extraColors.successContainer else extraColors.dangerContainer
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     val mealsByType = detail.meals.associateBy { it.mealType }
                     MealType.entries.forEachIndexed { idx, mealType ->
@@ -532,40 +533,51 @@ fun DateDetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = stringResource(R.string.calendar_rice_section),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        OutlinedButton(
-                            onClick = { onAddRiceForDate(date.toString()) },
-                            shape = RoundedCornerShape(10.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.calendar_add_rice_for_date))
+                            WarmIconBadge(
+                                icon = Icons.Default.RiceBowl,
+                                tint = extraColors.riceOrange,
+                                containerColor = extraColors.primarySoft,
+                                size = 36.dp,
+                                iconSize = 18.dp,
+                                cornerRadius = 11.dp
+                            )
+                            Text(
+                                text = stringResource(R.string.calendar_rice_section),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
+                        WarmActionPill(
+                            text = stringResource(R.string.action_add),
+                            icon = Icons.Default.Add,
+                            onClick = { onAddRiceForDate(date.toString()) }
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
+                        StatusPill(
                             text = "+${Formatters.formatKg(added)}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = extraColors.success
+                            color = extraColors.success,
+                            containerColor = extraColors.successContainer
                         )
-                        Text(
+                        StatusPill(
                             text = "-${Formatters.formatKg(deducted)}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = extraColors.riceOrange
+                            color = MaterialTheme.colorScheme.primary,
+                            containerColor = extraColors.primarySoft
                         )
-                        Text(
-                            text = "Adj ${Formatters.formatSignedKg(adj)}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        StatusPill(
+                            text = Formatters.formatSignedKg(adj),
+                            color = extraColors.amber,
+                            containerColor = extraColors.amberContainer
                         )
                     }
 
@@ -601,16 +613,28 @@ fun DateDetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = stringResource(R.string.calendar_study_section),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            WarmIconBadge(
+                                icon = Icons.Default.MenuBook,
+                                tint = extraColors.amber,
+                                containerColor = extraColors.amberContainer,
+                                size = 36.dp,
+                                iconSize = 18.dp,
+                                cornerRadius = 11.dp
+                            )
+                            Text(
+                                text = stringResource(R.string.calendar_study_section),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        StatusPill(
                             text = Formatters.formatDurationSeconds(totalStudySec),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = extraColors.studyGreen,
-                            fontWeight = FontWeight.SemiBold
+                            color = extraColors.success,
+                            containerColor = extraColors.successContainer
                         )
                     }
                     Spacer(modifier = Modifier.height(10.dp))
@@ -652,7 +676,12 @@ fun RiceTransactionItemRow(
     val qtyColor = when (tx.type) {
         RiceTransactionType.RICE_ADDED -> extraColors.success
         RiceTransactionType.MANUAL_ADJUSTMENT -> if (tx.quantityKg >= 0) extraColors.success else extraColors.danger
-        else -> extraColors.riceOrange
+        else -> MaterialTheme.colorScheme.primary
+    }
+    val qtyBg = when (tx.type) {
+        RiceTransactionType.RICE_ADDED -> extraColors.successContainer
+        RiceTransactionType.MANUAL_ADJUSTMENT -> if (tx.quantityKg >= 0) extraColors.successContainer else extraColors.dangerContainer
+        else -> extraColors.primarySoft
     }
 
     Row(
@@ -665,15 +694,15 @@ fun RiceTransactionItemRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = localizedRiceTxType(tx.type),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Bold
             )
             val subtitle = buildList {
                 add(tx.dateIso)
                 if (tx.note.isNotBlank()) add(tx.note)
                 else if (tx.relatedMealId != null) add(stringResource(R.string.rice_auto_deduction_note))
-            }.joinToString(" • ")
+            }.joinToString(" · ")
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
@@ -682,12 +711,12 @@ fun RiceTransactionItemRow(
                 overflow = TextOverflow.Ellipsis
             )
         }
+        Spacer(modifier = Modifier.width(6.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
+            StatusPill(
                 text = qtyText,
-                style = MaterialTheme.typography.labelLarge,
                 color = qtyColor,
-                fontWeight = FontWeight.SemiBold
+                containerColor = qtyBg
             )
             IconButton(onClick = onEdit) {
                 Icon(

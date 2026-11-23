@@ -16,15 +16,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material3.AlertDialog
@@ -35,15 +38,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -56,6 +57,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -72,9 +75,15 @@ import com.example.data.local.SubjectEntity
 import com.example.ui.components.CompactStatCard
 import com.example.ui.components.ConfirmDeleteDialog
 import com.example.ui.components.EmptyStateBox
-import com.example.ui.components.MessCard
 import com.example.ui.components.StatusPill
+import com.example.ui.components.WarmGradientButton
+import com.example.ui.components.WarmHeroCard
+import com.example.ui.components.WarmIconBadge
+import com.example.ui.components.WarmOutlinedButton
+import com.example.ui.components.WarmSegmentedTabBar
 import com.example.ui.components.localizedSemesterName
+import com.example.ui.components.warmMeshBackground
+import com.example.ui.components.warmTextFieldColors
 import com.example.ui.theme.LocalMessMateColors
 import com.example.ui.viewmodel.MessMateViewModel
 import com.example.ui.viewmodel.StudyTimerViewModel
@@ -92,6 +101,7 @@ fun StudyScreen(
     val stats by studyViewModel.currentMonthStats.collectAsStateWithLifecycle()
     val pomodoro by studyViewModel.pomodoro.collectAsStateWithLifecycle()
     val stopwatch by studyViewModel.stopwatch.collectAsStateWithLifecycle()
+    val extraColors = LocalMessMateColors.current
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf(
@@ -107,25 +117,34 @@ fun StudyScreen(
     pomodoro.completedFocusDurationSeconds?.let { duration ->
         AlertDialog(
             onDismissRequest = { studyViewModel.dismissPomodoroCompletionDialog() },
-            title = { Text(stringResource(R.string.study_pomodoro_complete_title)) },
+            shape = RoundedCornerShape(24.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = {
+                Text(
+                    stringResource(R.string.study_pomodoro_complete_title),
+                    fontWeight = FontWeight.ExtraBold
+                )
+            },
             text = {
                 Text(
                     stringResource(
                         R.string.study_pomodoro_complete_msg,
                         Formatters.formatDurationSeconds(duration)
-                    )
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
-                    studyViewModel.selectPomodoroMode(PomodoroMode.SHORT_BREAK)
-                }) {
-                    Text(stringResource(R.string.study_mode_short_break))
+                Button(
+                    onClick = { studyViewModel.selectPomodoroMode(PomodoroMode.SHORT_BREAK) },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.study_mode_short_break), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { studyViewModel.dismissPomodoroCompletionDialog() }) {
-                    Text(stringResource(R.string.action_close))
+                    Text(stringResource(R.string.action_close), fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -134,18 +153,31 @@ fun StudyScreen(
     if (pomodoro.breakCompleted) {
         AlertDialog(
             onDismissRequest = { studyViewModel.dismissPomodoroCompletionDialog() },
-            title = { Text(stringResource(R.string.study_break_complete_title)) },
-            text = { Text(stringResource(R.string.study_break_complete_msg)) },
+            shape = RoundedCornerShape(24.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = {
+                Text(
+                    stringResource(R.string.study_break_complete_title),
+                    fontWeight = FontWeight.ExtraBold
+                )
+            },
+            text = {
+                Text(
+                    stringResource(R.string.study_break_complete_msg),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
             confirmButton = {
-                TextButton(onClick = {
-                    studyViewModel.selectPomodoroMode(PomodoroMode.FOCUS)
-                }) {
-                    Text(stringResource(R.string.study_mode_focus))
+                Button(
+                    onClick = { studyViewModel.selectPomodoroMode(PomodoroMode.FOCUS) },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.study_mode_focus), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { studyViewModel.dismissPomodoroCompletionDialog() }) {
-                    Text(stringResource(R.string.action_close))
+                    Text(stringResource(R.string.action_close), fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -155,21 +187,30 @@ fun StudyScreen(
     stopwatch.pendingSaveDurationSeconds?.let { duration ->
         AlertDialog(
             onDismissRequest = { studyViewModel.discardStopwatchPendingSave() },
-            title = { Text(stringResource(R.string.study_stopwatch_save_title)) },
+            shape = RoundedCornerShape(24.dp),
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = {
+                Text(
+                    stringResource(R.string.study_stopwatch_save_title),
+                    fontWeight = FontWeight.ExtraBold
+                )
+            },
             text = {
                 Text(
                     stringResource(
                         R.string.study_stopwatch_save_msg,
                         Formatters.formatDurationSeconds(duration)
-                    )
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = { studyViewModel.confirmSaveStopwatch(fallbackSubjectName) },
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.testTag("stopwatch_confirm_save")
                 ) {
-                    Text(stringResource(R.string.action_save))
+                    Text(stringResource(R.string.action_save), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -177,7 +218,7 @@ fun StudyScreen(
                     onClick = { studyViewModel.discardStopwatchPendingSave() },
                     modifier = Modifier.testTag("stopwatch_discard")
                 ) {
-                    Text(stringResource(R.string.study_stopwatch_discard))
+                    Text(stringResource(R.string.study_stopwatch_discard), fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -186,34 +227,43 @@ fun StudyScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .warmMeshBackground()
     ) {
-        Text(
-            text = stringResource(R.string.study_title),
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 8.dp)
-        )
-
-        ScrollableTabRow(
-            selectedTabIndex = selectedTab,
-            containerColor = MaterialTheme.colorScheme.background,
-            edgePadding = 16.dp,
-            divider = {}
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title, maxLines = 1) },
-                    modifier = Modifier.testTag("study_tab_$index")
-                )
-            }
+            WarmIconBadge(
+                icon = Icons.Default.MenuBook,
+                tint = extraColors.amber,
+                containerColor = extraColors.amberContainer,
+                borderColor = extraColors.amberBorder,
+                size = 40.dp,
+                iconSize = 20.dp
+            )
+            Text(
+                text = stringResource(R.string.study_title),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.ExtraBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
 
-        // Show matching subjects for the user's selected semester & technology (plus any custom subjects),
-        // or all subjects if no department/semester filter is configured in Profile.
+        WarmSegmentedTabBar(
+            tabs = tabs,
+            selectedIndex = selectedTab,
+            onSelect = { selectedTab = it },
+            tagPrefix = "study_tab",
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
         val dropdownSubjects = remember(subjects, profile) {
             val profSem = profile?.semester.orEmpty()
             val profDept = profile?.department.orEmpty()
@@ -279,7 +329,8 @@ private fun SubjectSelectorDropdown(
             readOnly = true,
             label = { Text(stringResource(R.string.study_select_subject)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = warmTextFieldColors(),
             singleLine = true,
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
@@ -287,10 +338,11 @@ private fun SubjectSelectorDropdown(
         )
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            containerColor = MaterialTheme.colorScheme.surface
         ) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.study_no_subject_selected)) },
+                text = { Text(stringResource(R.string.study_no_subject_selected), fontWeight = FontWeight.SemiBold) },
                 onClick = {
                     onSelect(null)
                     expanded = false
@@ -305,9 +357,9 @@ private fun SubjectSelectorDropdown(
                 DropdownMenuItem(
                     text = {
                         Column {
-                            Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
                             Text(
-                                text = "${localizedSemesterName(subject.semester)} • ${subject.technology}",
+                                text = "${localizedSemesterName(subject.semester)} · ${subject.technology}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
@@ -343,9 +395,14 @@ private fun PomodoroTab(
         PomodoroMode.LONG_BREAK -> stringResource(R.string.study_mode_long_break)
     }
     val modeColor = when (state.mode) {
-        PomodoroMode.FOCUS -> extraColors.studyGreen
-        PomodoroMode.SHORT_BREAK -> MaterialTheme.colorScheme.primary
-        PomodoroMode.LONG_BREAK -> extraColors.riceOrange
+        PomodoroMode.FOCUS -> MaterialTheme.colorScheme.primary
+        PomodoroMode.SHORT_BREAK -> extraColors.success
+        PomodoroMode.LONG_BREAK -> extraColors.amber
+    }
+    val modeContainer = when (state.mode) {
+        PomodoroMode.FOCUS -> extraColors.primarySoft
+        PomodoroMode.SHORT_BREAK -> extraColors.successContainer
+        PomodoroMode.LONG_BREAK -> extraColors.amberContainer
     }
 
     LazyColumn(
@@ -358,22 +415,22 @@ private fun PomodoroTab(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterChip(
+                PomodoroModeChip(
                     selected = state.mode == PomodoroMode.FOCUS,
+                    label = stringResource(R.string.study_mode_focus),
                     onClick = { studyViewModel.selectPomodoroMode(PomodoroMode.FOCUS) },
-                    label = { Text(stringResource(R.string.study_mode_focus), maxLines = 1) },
                     modifier = Modifier.weight(1f)
                 )
-                FilterChip(
+                PomodoroModeChip(
                     selected = state.mode == PomodoroMode.SHORT_BREAK,
+                    label = stringResource(R.string.study_mode_short_break),
                     onClick = { studyViewModel.selectPomodoroMode(PomodoroMode.SHORT_BREAK) },
-                    label = { Text(stringResource(R.string.study_mode_short_break), maxLines = 1) },
                     modifier = Modifier.weight(1f)
                 )
-                FilterChip(
+                PomodoroModeChip(
                     selected = state.mode == PomodoroMode.LONG_BREAK,
+                    label = stringResource(R.string.study_mode_long_break),
                     onClick = { studyViewModel.selectPomodoroMode(PomodoroMode.LONG_BREAK) },
-                    label = { Text(stringResource(R.string.study_mode_long_break), maxLines = 1) },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -388,88 +445,124 @@ private fun PomodoroTab(
         }
 
         item {
-            MessCard {
+            WarmHeroCard {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 14.dp),
+                        .padding(vertical = 10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    StatusPill(text = modeLabel, color = modeColor)
-                    Spacer(modifier = Modifier.height(20.dp))
+                    StatusPill(
+                        text = modeLabel,
+                        color = modeColor,
+                        containerColor = modeContainer,
+                        icon = Icons.Default.Timer
+                    )
+                    Spacer(modifier = Modifier.height(22.dp))
 
                     Box(
-                        modifier = Modifier.size(196.dp),
+                        modifier = Modifier.size(214.dp),
                         contentAlignment = Alignment.Center
                     ) {
+                        Surface(
+                            modifier = Modifier.size(188.dp),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surface,
+                            border = BorderStroke(1.dp, extraColors.divider)
+                        ) {}
                         CircularProgressIndicator(
                             progress = { progress },
                             modifier = Modifier.fillMaxSize(),
                             color = modeColor,
                             trackColor = extraColors.surfaceElevated,
-                            strokeWidth = 10.dp,
+                            strokeWidth = 12.dp,
                             strokeCap = StrokeCap.Round
                         )
                         Text(
                             text = Formatters.formatTimerClock(state.remainingSeconds),
                             style = MaterialTheme.typography.displaySmall,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.ExtraBold,
                             modifier = Modifier.testTag("pomodoro_clock_display")
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(26.dp))
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (state.isRunning) {
-                            Button(
+                            WarmGradientButton(
+                                text = stringResource(R.string.study_btn_pause),
+                                icon = Icons.Default.Pause,
                                 onClick = { studyViewModel.pausePomodoro() },
-                                shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
-                                    .height(48.dp)
+                                    .weight(1.3f)
                                     .testTag("pomodoro_pause_button")
-                            ) {
-                                Icon(Icons.Default.Pause, contentDescription = null)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(stringResource(R.string.study_btn_pause))
-                            }
+                            )
                         } else {
-                            Button(
+                            WarmGradientButton(
+                                text = if (state.hasStarted) stringResource(R.string.study_btn_resume)
+                                else stringResource(R.string.study_btn_start),
+                                icon = Icons.Default.PlayArrow,
                                 onClick = { studyViewModel.startOrResumePomodoro(fallbackSubjectName) },
-                                shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
-                                    .height(48.dp)
+                                    .weight(1.3f)
                                     .testTag("pomodoro_start_button")
-                            ) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = null)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    if (state.hasStarted) stringResource(R.string.study_btn_resume)
-                                    else stringResource(R.string.study_btn_start)
-                                )
-                            }
+                            )
                         }
 
-                        OutlinedButton(
+                        WarmOutlinedButton(
+                            text = stringResource(R.string.study_btn_reset),
+                            icon = Icons.Default.Refresh,
                             onClick = { studyViewModel.resetPomodoro() },
-                            shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
-                                .height(48.dp)
+                                .weight(1f)
                                 .testTag("pomodoro_reset_button")
-                        ) {
-                            Icon(Icons.Default.Refresh, contentDescription = null)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.study_btn_reset))
-                        }
+                        )
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun PomodoroModeChip(
+    selected: Boolean,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val extra = LocalMessMateColors.current
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = {
+            Text(
+                text = label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        shape = RoundedCornerShape(14.dp),
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = MaterialTheme.colorScheme.primary,
+            selectedLabelColor = Color.White,
+            containerColor = MaterialTheme.colorScheme.surface,
+            labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+        ),
+        border = FilterChipDefaults.filterChipBorder(
+            enabled = true,
+            selected = selected,
+            borderColor = extra.divider
+        ),
+        modifier = modifier
+    )
 }
 
 @Composable
@@ -494,82 +587,91 @@ private fun StopwatchTab(
         }
 
         item {
-            MessCard {
+            WarmHeroCard {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 24.dp),
+                        .padding(vertical = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     StatusPill(
                         text = stringResource(R.string.study_tab_stopwatch),
-                        color = extraColors.mealBlue
+                        color = extraColors.amber,
+                        containerColor = extraColors.amberContainer,
+                        icon = Icons.Default.Timer
                     )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Text(
-                        text = Formatters.formatTimerClock(state.elapsedSeconds),
-                        style = MaterialTheme.typography.displaySmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.testTag("stopwatch_clock_display")
-                    )
-                    Spacer(modifier = Modifier.height(28.dp))
+                    Spacer(modifier = Modifier.height(22.dp))
+                    Surface(
+                        shape = RoundedCornerShape(22.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, extraColors.divider)
+                    ) {
+                        Text(
+                            text = Formatters.formatTimerClock(state.elapsedSeconds),
+                            style = MaterialTheme.typography.displaySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier
+                                .padding(horizontal = 28.dp, vertical = 18.dp)
+                                .testTag("stopwatch_clock_display")
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(26.dp))
 
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (state.isRunning) {
-                            Button(
+                            WarmGradientButton(
+                                text = stringResource(R.string.study_btn_pause),
+                                icon = Icons.Default.Pause,
                                 onClick = { studyViewModel.pauseStopwatch() },
-                                shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
-                                    .height(48.dp)
+                                    .weight(1.2f)
                                     .testTag("stopwatch_pause_button")
-                            ) {
-                                Icon(Icons.Default.Pause, contentDescription = null)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(stringResource(R.string.study_btn_pause))
-                            }
+                            )
                         } else {
-                            Button(
+                            WarmGradientButton(
+                                text = if (state.hasStarted) stringResource(R.string.study_btn_resume)
+                                else stringResource(R.string.study_btn_start),
+                                icon = Icons.Default.PlayArrow,
                                 onClick = { studyViewModel.startOrResumeStopwatch() },
-                                shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
-                                    .height(48.dp)
+                                    .weight(1.2f)
                                     .testTag("stopwatch_start_button")
-                            ) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = null)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    if (state.hasStarted) stringResource(R.string.study_btn_resume)
-                                    else stringResource(R.string.study_btn_start)
-                                )
-                            }
+                            )
                         }
 
                         if (state.elapsedSeconds > 0L) {
-                            OutlinedButton(
+                            WarmOutlinedButton(
+                                text = stringResource(R.string.study_btn_stop),
+                                icon = Icons.Default.Stop,
+                                contentColor = MaterialTheme.colorScheme.primary,
                                 onClick = { studyViewModel.stopStopwatch() },
-                                shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
-                                    .height(48.dp)
+                                    .weight(1f)
                                     .testTag("stopwatch_stop_button")
-                            ) {
-                                Icon(Icons.Default.Stop, contentDescription = null)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(stringResource(R.string.study_btn_stop))
-                            }
+                            )
                         }
 
-                        OutlinedButton(
+                        Surface(
                             onClick = { studyViewModel.resetStopwatch() },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            border = BorderStroke(1.dp, extraColors.borderStrong),
                             modifier = Modifier
-                                .height(48.dp)
+                                .size(50.dp)
                                 .testTag("stopwatch_reset_button")
                         ) {
-                            Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.study_btn_reset))
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = stringResource(R.string.study_btn_reset),
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                     }
                 }
@@ -587,6 +689,7 @@ private fun SubjectsTab(
     defaultTechnology: String
 ) {
     val scope = rememberCoroutineScope()
+    val extraColors = LocalMessMateColors.current
     var filterSemester by rememberSaveable { mutableStateOf(defaultSemester) }
     var filterTech by rememberSaveable { mutableStateOf(defaultTechnology) }
     var semExpanded by remember { mutableStateOf(false) }
@@ -658,6 +761,8 @@ private fun SubjectsTab(
         )
     }
 
+    val fieldColors = warmTextFieldColors()
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -680,12 +785,17 @@ private fun SubjectsTab(
                         label = { Text(stringResource(R.string.setup_semester_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = semExpanded) },
                         singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = fieldColors,
                         modifier = Modifier
                             .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                             .fillMaxWidth()
                     )
-                    ExposedDropdownMenu(expanded = semExpanded, onDismissRequest = { semExpanded = false }) {
+                    ExposedDropdownMenu(
+                        expanded = semExpanded,
+                        onDismissRequest = { semExpanded = false },
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ) {
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.label_all)) },
                             onClick = { filterSemester = "ALL"; semExpanded = false }
@@ -711,12 +821,17 @@ private fun SubjectsTab(
                         label = { Text(stringResource(R.string.setup_department_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = techExpanded) },
                         singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = fieldColors,
                         modifier = Modifier
                             .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                             .fillMaxWidth()
                     )
-                    ExposedDropdownMenu(expanded = techExpanded, onDismissRequest = { techExpanded = false }) {
+                    ExposedDropdownMenu(
+                        expanded = techExpanded,
+                        onDismissRequest = { techExpanded = false },
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ) {
                         availableTechnologies.forEach { tech ->
                             DropdownMenuItem(
                                 text = { Text(if (tech == "ALL") stringResource(R.string.label_all) else tech) },
@@ -729,17 +844,14 @@ private fun SubjectsTab(
         }
 
         item {
-            Button(
+            WarmGradientButton(
+                text = stringResource(R.string.study_add_subject),
+                icon = Icons.Default.Add,
                 onClick = { showAddDialog = true },
-                shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("add_subject_button")
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(stringResource(R.string.study_add_subject))
-            }
+            )
         }
 
         if (filtered.isEmpty()) {
@@ -752,36 +864,51 @@ private fun SubjectsTab(
         } else {
             items(filtered, key = { it.id }) { subject ->
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(20.dp),
                     color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, LocalMessMateColors.current.divider),
+                    border = BorderStroke(1.dp, extraColors.divider),
+                    shadowElevation = if (extraColors.isDark) 0.dp else 1.5.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = subject.subjectName,
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onSurface
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            WarmIconBadge(
+                                icon = Icons.Default.MenuBook,
+                                tint = extraColors.amber,
+                                containerColor = extraColors.amberContainer,
+                                size = 40.dp,
+                                iconSize = 19.dp
                             )
-                            val meta = buildList {
-                                if (subject.subjectCode.isNotBlank()) add(subject.subjectCode)
-                                add(localizedSemesterName(subject.semester))
-                                if (subject.technology.isNotBlank()) add(subject.technology)
-                            }.joinToString(" • ")
-                            Text(
-                                text = meta,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = subject.subjectName,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                val meta = buildList {
+                                    if (subject.subjectCode.isNotBlank()) add(subject.subjectCode)
+                                    add(localizedSemesterName(subject.semester))
+                                    if (subject.technology.isNotBlank()) add(subject.technology)
+                                }.joinToString(" · ")
+                                Text(
+                                    text = meta,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                         Row {
                             IconButton(onClick = { editingSubject = subject }) {
@@ -789,15 +916,15 @@ private fun SubjectsTab(
                                     imageVector = Icons.Default.Edit,
                                     contentDescription = stringResource(R.string.action_edit),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(19.dp)
                                 )
                             }
                             IconButton(onClick = { deletingSubject = subject }) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = stringResource(R.string.action_delete),
-                                    tint = LocalMessMateColors.current.danger,
-                                    modifier = Modifier.size(20.dp)
+                                    tint = extraColors.danger,
+                                    modifier = Modifier.size(19.dp)
                                 )
                             }
                         }
@@ -864,7 +991,7 @@ private fun StudyHistoryTab(
                 CompactStatCard(
                     label = stringResource(R.string.study_stats_weekly),
                     value = Formatters.formatDurationHoursMinutes(stats.weeklySeconds),
-                    accentColor = extraColors.mealBlue,
+                    accentColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -918,49 +1045,64 @@ fun StudySessionRowCard(
 ) {
     val extraColors = LocalMessMateColors.current
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, extraColors.divider),
+        shadowElevation = if (extraColors.isDark) 0.dp else 1.5.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp),
+                .padding(horizontal = 14.dp, vertical = 11.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (session.subjectCode.isNotBlank()) {
-                        "${session.subjectName} (${session.subjectCode})"
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                WarmIconBadge(
+                    icon = Icons.Default.MenuBook,
+                    tint = extraColors.amber,
+                    containerColor = extraColors.amberContainer,
+                    size = 38.dp,
+                    iconSize = 18.dp,
+                    cornerRadius = 12.dp
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (session.subjectCode.isNotBlank()) {
+                            "${session.subjectName} (${session.subjectCode})"
+                        } else {
+                            session.subjectName
+                        },
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    val statusLabel = if (session.completionStatus == StudyCompletionStatus.COMPLETED) {
+                        stringResource(R.string.study_status_completed)
                     } else {
-                        session.subjectName
-                    },
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                val statusLabel = if (session.completionStatus == StudyCompletionStatus.COMPLETED) {
-                    stringResource(R.string.study_status_completed)
-                } else {
-                    stringResource(R.string.study_status_stopped)
+                        stringResource(R.string.study_status_stopped)
+                    }
+                    Text(
+                        text = "${session.dateIso} · ${session.sessionType.name.lowercase().replaceFirstChar { it.uppercase() }} · $statusLabel",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-                Text(
-                    text = "${session.dateIso} • ${session.sessionType.name.lowercase().replaceFirstChar { it.uppercase() }} • $statusLabel",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
+                StatusPill(
                     text = Formatters.formatDurationSeconds(session.durationSeconds),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = extraColors.studyGreen,
-                    fontWeight = FontWeight.SemiBold
+                    color = extraColors.success,
+                    containerColor = extraColors.successContainer
                 )
                 IconButton(onClick = onEdit) {
                     Icon(

@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MessMate</string>
+    <string name="app_version">1.0.0</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">হোম</string>
+    <string name="nav_meals">মিল</string>
+    <string name="nav_study">পড়াশোনা</string>
+    <string name="nav_records">রিপোর্ট</string>
+
+    <!-- Common Actions & Labels -->
+    <string name="action_save">সংরক্ষণ</string>
+    <string name="action_cancel">বাতিল</string>
+    <string name="action_delete">মুছুন</string>
+    <string name="action_edit">সম্পাদনা</string>
+    <string name="action_add">যোগ করুন</string>
+    <string name="action_back">ফিরে যান</string>
+    <string name="action_close">বন্ধ করুন</string>
+    <string name="action_confirm">নিশ্চিত করুন</string>
+    <string name="action_settings">সেটিংস</string>
+    <string name="action_calendar">ক্যালেন্ডার</string>
+    <string name="action_profile">প্রোফাইল</string>
+    <string name="action_finish_setup">সেটআপ সম্পন্ন করুন</string>
+    <string name="action_skip_optional">ঐচ্ছিক অংশ এড়িয়ে যান</string>
+    <string name="label_optional">ঐচ্ছিক</string>
+    <string name="label_all">সব</string>
+    <string name="label_none">কোনোটিই নয়</string>
+    <string name="label_date">তারিখ</string>
+    <string name="label_note_optional">নোট (ঐচ্ছিক)</string>
+
+    <!-- Semesters & Technologies -->
+    <string name="semester_1">১ম সেমিস্টার</string>
+    <string name="semester_2">২য় সেমিস্টার</string>
+    <string name="semester_3">৩য় সেমিস্টার</string>
+    <string name="semester_4">৪র্থ সেমিস্টার</string>
+    <string name="semester_5">৫ম সেমিস্টার</string>
+    <string name="semester_6">৬ষ্ঠ সেমিস্টার</string>
+    <string name="semester_7">৭ম সেমিস্টার</string>
+    <string name="semester_8">৮ম সেমিস্টার</string>
+    <string name="tech_other_custom">অন্যান্য / কাস্টম</string>
+
+    <!-- First-Launch Setup -->
+    <string name="setup_title">MessMate-এ স্বাগতম</string>
+    <string name="setup_subtitle">প্রতিদিনের মিল, চালের হিসাব ও পড়াশোনা অফলাইনে পরিচালনা করতে আপনার প্রোফাইল সেটআপ করুন।</string>
+    <string name="setup_language_label">পছন্দের ভাষা</string>
+    <string name="setup_photo_label">প্রোফাইল ছবি</string>
+    <string name="setup_photo_hint">আপনার ডিভাইসেই সংরক্ষিত থাকবে</string>
+    <string name="setup_photo_pick">ছবি নির্বাচন</string>
+    <string name="setup_photo_change">পরিবর্তন</string>
+    <string name="setup_photo_remove">মুছুন</string>
+    <string name="setup_name_label">আপনার নাম *</string>
+    <string name="setup_name_placeholder">আপনার পুরো নাম লিখুন</string>
+    <string name="setup_name_error">চালিয়ে যেতে অনুগ্রহ করে আপনার নাম লিখুন।</string>
+    <string name="setup_mess_label">মেসের নাম</string>
+    <string name="setup_mess_placeholder">যেমন: গ্রিন ভিউ স্টুডেন্ট মেস</string>
+    <string name="setup_institution_label">প্রতিষ্ঠানের নাম</string>
+    <string name="setup_institution_placeholder">যেমন: ঢাকা পলিটেকনিক ইনস্টিটিউট</string>
+    <string name="setup_department_label">বিভাগ / টেকনোলজি</string>
+    <string name="setup_custom_department_label">কাস্টম বিভাগ / টেকনোলজি</string>
+    <string name="setup_semester_label">সেমিস্টার</string>
+    <string name="setup_permission_notifications_title">রিমাইন্ডার নোটিফিকেশন</string>
+    <string name="setup_permission_notifications_desc">প্রতিদিন দুপুর ১২:০০ টার মিল রিমাইন্ডার এবং আপনার পড়াশোনার রিমাইন্ডারের জন্য অনুমতি দিন।</string>
+    <string name="setup_permission_grant">নোটিফিকেশন চালু করুন</string>
+    <string name="setup_permission_granted">নোটিফিকেশন চালু আছে</string>
+    <string name="setup_permission_denied_note">নোটিফিকেশন ছাড়াই অ্যাপ ব্যবহার করতে পারবেন এবং পরে ডিভাইস সেটিংস থেকে চালু করতে পারবেন।</string>
+
+    <!-- Home Dashboard -->
+    <string name="home_greeting">হ্যালো, %1$s</string>
+    <string name="home_todays_meals">আজকের মিল</string>
+    <string name="home_meal_cycle_on_badge">মিল চালু</string>
+    <string name="home_meal_cycle_off_badge">মিল বন্ধ</string>
+    <string name="home_rice_stock">ব্যক্তিগত চালের মজুদ</string>
+    <string name="home_rice_low_warning">চালের মজুদ কম (২.০০ কেজি বা তার কম)। শীঘ্রই চাল জমা দিন।</string>
+    <string name="home_rice_negative_warning">চালের ব্যালেন্স ঋণাত্মক। পরবর্তী চাল জমা দিয়ে সমন্বয় করুন।</string>
+    <string name="home_study_progress">আজকের পড়াশোনার অগ্রগতি</string>
+    <string name="home_study_goal_of">লক্ষ্য: %1$s</string>
+    <string name="home_recent_activity">সাম্প্রতিক কার্যক্রম</string>
+    <string name="home_no_recent_activity">এখনো কোনো কার্যক্রম নেই। চাল যোগ করুন, পড়াশোনা শুরু করুন বা মিল পরিচালনা করুন।</string>
+    <string name="quick_add_rice">চাল যোগ</string>
+    <string name="quick_start_study">পড়াশোনা</string>
+    <string name="quick_manage_meals">মিল ব্যবস্থাপনা</string>
+    <string name="home_quick_actions">দ্রুত অ্যাকশন</string>
+    <string name="home_view_all">সব দেখুন</string>
+    <string name="home_meals_counted_summary">৩টির মধ্যে %1$dটি মিল গণনাকৃত</string>
+    <string name="home_study_goal_reached">দৈনিক লক্ষ্যের %1$d%% সম্পন্ন</string>
+    <string name="home_per_day_rate">%1$s / দিন</string>
+    <string name="home_last_focus">সর্বশেষ ফোকাস: %1$s (%2$s)</string>
+    <string name="home_offline_status">সম্পূর্ণ অফলাইন</string>
+    <string name="calendar_am_cycle_status">সকালের সাইকেল: %1$s</string>
+    <string name="calendar_dinner_cycle_status">রাতের সাইকেল: %1$s</string>
+
+    <!-- Meals -->
+    <string name="meals_title">মিল ব্যবস্থাপনা</string>
+    <string name="meal_breakfast">সকালের নাস্তা</string>
+    <string name="meal_lunch">দুপুরের খাবার</string>
+    <string name="meal_dinner">রাতের খাবার</string>
+    <string name="meal_time_breakfast">সকাল ৮:০০ (BST)</string>
+    <string name="meal_time_lunch">দুপুর ১২:০০ (BST)</string>
+    <string name="meal_time_dinner">রাত ৮:০০ (BST)</string>
+    <string name="meal_on">মিল চালু</string>
+    <string name="meal_off">মিল বন্ধ</string>
+    <string name="meal_status_pending">অপেক্ষমাণ</string>
+    <string name="meal_status_counted">গণনাকৃত</string>
+    <string name="meal_status_skipped">বাদ দেওয়া হয়েছে</string>
+    <string name="meal_status_off">মিল বন্ধ</string>
+    <string name="meal_toggle_title">মিল স্ট্যাটাস (স্থায়ী)</string>
+    <string name="meal_toggle_subtitle_on">মিল বন্ধ না করা পর্যন্ত নির্ধারিত সময়ে স্বয়ংক্রিয়ভাবে মিল গণনা হবে।</string>
+    <string name="meal_toggle_subtitle_off">আবার চালু না করা পর্যন্ত পরবর্তী সাইকেলগুলোতে মিল বন্ধ থাকবে।</string>
+    <string name="meal_deadline_before_1pm">দুপুর ১:০০ এর আগে (BST) — পরিবর্তন আজ রাতের ডিনার সাইকেল (%1$s) থেকে প্রযোজ্য হবে।</string>
+    <string name="meal_deadline_grace">গ্রেস পিরিয়ড (দুপুর ১:০০–২:০০ BST) — বিলম্বিত পরিবর্তন আজ রাতের ডিনার সাইকেলে (%1$s) প্রযোজ্য হবে।</string>
+    <string name="meal_deadline_after_2pm">দুপুর ২:০০ এর পর (BST) — আজ রাতের সাইকেল লক হয়ে গেছে। পরিবর্তন আগামীকালের ডিনার সাইকেল (%1$s) থেকে প্রযোজ্য হবে।</string>
+    <string name="meal_grace_warning_title">গ্রেস পিরিয়ড আপডেট</string>
+    <string name="meal_grace_warning_body">আপনি বাংলাদেশ সময় দুপুর ১:০০ থেকে ২:০০ এর মধ্যে মিল স্ট্যাটাস পরিবর্তন করছেন। এই পরিবর্তনটি আসন্ন ডিনার সাইকেলে (%1$s) প্রযোজ্য হবে।</string>
+    <string name="meal_after_2pm_notice_title">পরবর্তী সাইকেলে নির্ধারিত</string>
+    <string name="meal_after_2pm_notice_body">বাংলাদেশ সময় দুপুর ২:০০ পেরিয়ে যাওয়ায় আজ রাতের সাইকেল লক রয়েছে। আপনার পরিবর্তনটি %1$s তারিখ থেকে শুরু হওয়া পরবর্তী সাইকেলে নির্ধারিত হয়েছে।</string>
+    <string name="meal_cycle_card_title">মিল সাইকেল</string>
+    <string name="meal_cycle_label">%1$s থেকে শুরু সাইকেল</string>
+    <string name="meal_cycle_desc">রাতের খাবার (%1$s) → নাস্তা ও দুপুরের খাবার (%2$s)</string>
+    <string name="meal_upcoming_scheduled">পরবর্তী সাইকেলে (%1$s) নির্ধারিত: %2$s</string>
+    <string name="meal_action_skip">বাদ দিন</string>
+    <string name="meal_action_restore">পুনরুদ্ধার</string>
+    <string name="meal_open_calendar">মিল ক্যালেন্ডার দেখুন</string>
+    <string name="meal_rules_title">মিল সাইকেল যেভাবে কাজ করে</string>
+    <string name="meal_rules_desc">প্রতিটি মিল সাইকেলে রাতের খাবার (রাত ৮:০০) এবং পরের দিনের নাস্তা (সকাল ৮:০০) ও দুপুরের খাবার (দুপুর ১২:০০) যুক্ত থাকে। দুপুর ১:০০ এর আগে মিল চালু/বন্ধ পরিবর্তন করুন (গ্রেস পিরিয়ড দুপুর ২:০০ পর্যন্ত)।</string>
+
+    <!-- Rice -->
+    <string name="rice_add_title">চাল জমা দিন</string>
+    <string name="rice_adjust_title">ম্যানুয়াল চাল সমন্বয়</string>
+    <string name="rice_edit_title">চালের রেকর্ড সম্পাদনা</string>
+    <string name="rice_current_stock_label">বর্তমান চালের মজুদ</string>
+    <string name="rice_quantity_label">পরিমাণ (কেজি)</string>
+    <string name="rice_quantity_adjust_hint">যোগ করতে (+) এবং কমাতে (-) ব্যবহার করুন</string>
+    <string name="rice_quantity_error_positive">০ এর বেশি সঠিক পরিমাণ লিখুন।</string>
+    <string name="rice_quantity_error_nonzero">০ ব্যতীত সঠিক সমন্বয় পরিমাণ লিখুন।</string>
+    <string name="rice_tx_added">চাল জমা</string>
+    <string name="rice_tx_breakfast">নাস্তার চাল কর্তন</string>
+    <string name="rice_tx_lunch">দুপুরের খাবারের চাল কর্তন</string>
+    <string name="rice_tx_dinner">রাতের খাবারের চাল কর্তন</string>
+    <string name="rice_tx_adjustment">ম্যানুয়াল সমন্বয়</string>
+    <string name="rice_total_added">জমা</string>
+    <string name="rice_total_consumed">ব্যবহৃত</string>
+    <string name="rice_total_adjusted">সমন্বয়</string>
+    <string name="rice_empty_history">এই মাসে এখনো কোনো চালের লেনদেন নেই।</string>
+    <string name="rice_auto_deduction_note">গণনাকৃত মিল থেকে স্বয়ংক্রিয় কর্তন</string>
+    <string name="rice_delete_confirm_title">চালের রেকর্ড মুছবেন?</string>
+    <string name="rice_delete_confirm_body">এই লেনদেনটি স্থায়ীভাবে মুছে ফেলা হবে এবং আপনার চালের মজুদ পুনরায় হিসাব করা হবে।</string>
+
+    <!-- Study -->
+    <string name="study_title">পড়াশোনা ব্যবস্থাপনা</string>
+    <string name="study_tab_pomodoro">পোমোডোরো</string>
+    <string name="study_tab_stopwatch">স্টপওয়াচ</string>
+    <string name="study_tab_subjects">বিষয়সমূহ</string>
+    <string name="study_tab_history">ইতিহাস</string>
+    <string name="study_mode_focus">ফোকাস</string>
+    <string name="study_mode_short_break">ছোট বিরতি</string>
+    <string name="study_mode_long_break">বড় বিরতি</string>
+    <string name="study_select_subject">বিষয়</string>
+    <string name="study_no_subject_selected">সাধারণ পড়াশোনা</string>
+    <string name="study_btn_start">শুরু</string>
+    <string name="study_btn_pause">বিরতি</string>
+    <string name="study_btn_resume">চালু করুন</string>
+    <string name="study_btn_reset">রিসেট</string>
+    <string name="study_btn_stop">থামান</string>
+    <string name="study_pomodoro_complete_title">ফোকাস সেশন সম্পন্ন</string>
+    <string name="study_pomodoro_complete_msg">আপনার ফোকাস সেশন (%1$s) ইতিহাসে সংরক্ষিত হয়েছে। পরবর্তী সেশন নিজে নির্বাচন করুন।</string>
+    <string name="study_break_complete_title">বিরতি শেষ</string>
+    <string name="study_break_complete_msg">বিরতির সময় শেষ হয়েছে। বিরতি পড়াশোনার সময়ে গণনা হয় না। প্রস্তুত হলে পরবর্তী ফোকাস সেশন শুরু করুন।</string>
+    <string name="study_stopwatch_save_title">সেশন সংরক্ষণ করবেন?</string>
+    <string name="study_stopwatch_save_msg">মোট সময়: %1$s। এই স্টপওয়াচ সেশনটি পড়াশোনার ইতিহাসে সংরক্ষণ করবেন?</string>
+    <string name="study_stopwatch_discard">বাতিল</string>
+    <string name="study_add_subject">বিষয় যোগ করুন</string>
+    <string name="study_edit_subject">বিষয় সম্পাদনা</string>
+    <string name="study_subject_name_label">বিষয়ের নাম *</string>
+    <string name="study_subject_code_label">বিষয় কোড (ঐচ্ছিক)</string>
+    <string name="study_subject_name_error">একটি বিষয়ের নাম লিখুন।</string>
+    <string name="study_subjects_empty">এই ফিল্টারে কোনো বিষয় পাওয়া যায়নি। যেকোনো সময় কাস্টম বিষয় যোগ করুন।</string>
+    <string name="study_subject_delete_title">বিষয় মুছবেন?</string>
+    <string name="study_subject_delete_msg">\"%1$s\" মুছে ফেলবেন? পূর্বের পড়াশোনার ইতিহাস সংরক্ষিত থাকবে।</string>
+    <string name="study_history_empty">এখনো কোনো পড়াশোনার সেশন সংরক্ষিত নেই।</string>
+    <string name="study_session_edit_title">সেশন সম্পাদনা</string>
+    <string name="study_session_duration_min">সময়কাল (মিনিট)</string>
+    <string name="study_session_duration_error">০ মিনিটের বেশি সময়কাল লিখুন।</string>
+    <string name="study_session_delete_title">পড়াশোনার সেশন মুছবেন?</string>
+    <string name="study_session_delete_msg">এই সেশনটি আপনার ইতিহাস এবং পরিসংখ্যান থেকে স্থায়ীভাবে মুছে ফেলা হবে।</string>
+    <string name="study_status_completed">সম্পন্ন</string>
+    <string name="study_status_stopped">থামানো হয়েছে</string>
+    <string name="study_stats_today">আজ</string>
+    <string name="study_stats_weekly">এই সপ্তাহ</string>
+    <string name="study_stats_monthly">এই মাস</string>
+    <string name="study_stats_streak">পড়াশোনার ধারা</string>
+    <string name="study_stats_streak_days">%1$d দিন</string>
+    <string name="study_stats_top_subject">সর্বাধিক পঠিত</string>
+    <string name="study_stats_subject_breakdown">বিষয়ভিত্তিক সময়</string>
+
+    <!-- Calendar & Date Detail -->
+    <string name="calendar_title">সম্মিলিত ক্যালেন্ডার</string>
+    <string name="calendar_legend_meal">মিল</string>
+    <string name="calendar_legend_study">পড়াশোনা</string>
+    <string name="calendar_legend_rice">চাল</string>
+    <string name="calendar_legend_off">মিল বন্ধ</string>
+    <string name="calendar_legend_none">কোনো কার্যক্রম নেই</string>
+    <string name="calendar_day_detail_title">তারিখের বিবরণ</string>
+    <string name="calendar_meal_section">মিলের রেকর্ড</string>
+    <string name="calendar_rice_section">চালের লেনদেন</string>
+    <string name="calendar_study_section">পড়াশোনার সেশন</string>
+    <string name="calendar_set_cycle_on">সাইকেল চালু করুন</string>
+    <string name="calendar_set_cycle_off">সাইকেল বন্ধ করুন</string>
+    <string name="calendar_add_rice_for_date">এই তারিখে চাল যোগ করুন</string>
+    <string name="calendar_no_rice_day">এই তারিখে কোনো চালের লেনদেন নেই।</string>
+    <string name="calendar_no_study_day">এই তারিখে কোনো পড়াশোনার সেশন নেই।</string>
+
+    <!-- Records & Monthly Reports -->
+    <string name="records_title">রেকর্ড ও রিপোর্ট</string>
+    <string name="records_tab_rice">চাল</string>
+    <string name="records_tab_meals">মিল</string>
+    <string name="records_tab_study">পড়াশোনা</string>
+    <string name="records_tab_reports">রিপোর্ট</string>
+    <string name="records_counted_meals">গণনাকৃত মিল</string>
+    <string name="records_skipped_meals">বাদ দেওয়া মিল</string>
+    <string name="records_off_days">মিল বন্ধ দিন</string>
+    <string name="records_total_study">মোট পড়াশোনার সময়</string>
+    <string name="records_monthly_report_title">মাসিক পিডিএফ রিপোর্ট</string>
+    <string name="records_generate_pdf">পিডিএফ রিপোর্ট তৈরি করুন</string>
+    <string name="records_preview_pdf">প্রিভিউ</string>
+    <string name="records_save_pdf">ডিভাইসে সংরক্ষণ</string>
+    <string name="records_share_pdf">শেয়ার</string>
+    <string name="records_pdf_ready">পিডিএফ প্রস্তুত: %1$s</string>
+    <string name="records_pdf_saved">পিডিএফ সফলভাবে সংরক্ষিত হয়েছে।</string>
+    <string name="records_pdf_error">পিডিএফ তৈরি বা সংরক্ষণ করা যায়নি।</string>
+    <string name="records_pdf_preview_title">পিডিএফ রিপোর্ট প্রিভিউ</string>
+    <string name="records_page_indicator">পৃষ্ঠা %1$d / %2$d</string>
+
+    <!-- PDF Labels -->
+    <string name="pdf_header_title">MessMate মাসিক রিপোর্ট</string>
+    <string name="pdf_student_name">শিক্ষার্থীর নাম</string>
+    <string name="pdf_mess_name">মেসের নাম</string>
+    <string name="pdf_institution">প্রতিষ্ঠান</string>
+    <string name="pdf_month">মাস</string>
+    <string name="pdf_meal_summary">মিলের সারসংক্ষেপ</string>
+    <string name="pdf_rice_summary">চালের সারসংক্ষেপ</string>
+    <string name="pdf_rice_contribution">মোট চাল জমা</string>
+    <string name="pdf_rice_consumption">মোট ব্যবহৃত চাল</string>
+    <string name="pdf_rice_adjustments">ম্যানুয়াল সমন্বয়</string>
+    <string name="pdf_rice_remaining">বর্তমান অবশিষ্ট মজুদ</string>
+    <string name="pdf_study_summary">পড়াশোনার সারসংক্ষেপ</string>
+    <string name="pdf_subject_report">বিষয়ভিত্তিক পড়াশোনার বিবরণ</string>
+    <string name="pdf_generated_offline">MessMate দ্বারা অফলাইনে তৈরি</string>
+
+    <!-- Settings & About -->
+    <string name="settings_title">সেটিংস</string>
+    <string name="settings_section_profile">ব্যক্তিগত প্রোফাইল</string>
+    <string name="settings_section_appearance">থিম</string>
+    <string name="settings_theme_dark">ডার্ক মোড</string>
+    <string name="settings_theme_light">লাইট মোড</string>
+    <string name="settings_theme_system">সিস্টেম ডিফল্ট</string>
+    <string name="settings_section_language">ভাষা</string>
+    <string name="settings_lang_en">English</string>
+    <string name="settings_lang_bn">বাংলা</string>
+    <string name="settings_section_rice">প্রতি মিলে চালের পরিমাণ (কেজি)</string>
+    <string name="settings_rice_daily_total">দৈনিক মোট (৩ মিল)</string>
+    <string name="settings_section_meals">মিল রিমাইন্ডার</string>
+    <string name="settings_section_study">পড়াশোনা ও পোমোডোরো ডিফল্ট</string>
+    <string name="settings_study_goal">দৈনিক পড়াশোনার লক্ষ্য (মিনিট)</string>
+    <string name="settings_pomodoro_focus">ফোকাস সময় (মিনিট)</string>
+    <string name="settings_pomodoro_short">ছোট বিরতি (মিনিট)</string>
+    <string name="settings_pomodoro_long">বড় বিরতি (মিনিট)</string>
+    <string name="settings_section_notifications">রিমাইন্ডার ও নোটিফিকেশন</string>
+    <string name="settings_meal_reminder">দৈনিক মিল রিমাইন্ডার (দুপুর ১২:০০ BST)</string>
+    <string name="settings_meal_reminder_desc">দুপুর ১:০০ এর মিল পরিবর্তনের সময়সীমার আগে আপনাকে মনে করিয়ে দেয়।</string>
+    <string name="settings_study_reminders">পড়াশোনার রিমাইন্ডার</string>
+    <string name="settings_add_reminder">রিমাইন্ডার যোগ করুন</string>
+    <string name="settings_edit_reminder">রিমাইন্ডার সম্পাদনা</string>
+    <string name="settings_reminder_label_hint">লেবেল (যেমন: সন্ধ্যার রিভিশন)</string>
+    <string name="settings_no_reminders">কোনো পড়াশোনার রিমাইন্ডার সেট করা নেই।</string>
+    <string name="settings_disable_all_reminders">সব পড়াশোনার রিমাইন্ডার বন্ধ করুন</string>
+    <string name="settings_profile_saved">প্রোফাইল আপডেট হয়েছে।</string>
+    <string name="settings_rice_saved">চালের হার আপডেট হয়েছে।</string>
+    <string name="settings_study_saved">পড়াশোনার সেটিংস সংরক্ষিত হয়েছে।</string>
+    <string name="settings_invalid_number">অনুগ্রহ করে সঠিক সংখ্যা লিখুন।</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_meal_name">মিল রিমাইন্ডার</string>
+    <string name="notif_channel_meal_desc">মিল চালু/বন্ধ করার সময়সীমার আগে প্রতিদিন দুপুর ১২:০০ টায় রিমাইন্ডার।</string>
+    <string name="notif_channel_study_name">পড়াশোনার রিমাইন্ডার</string>
+    <string name="notif_channel_study_desc">আপনার নির্ধারিত দৈনিক পড়াশোনার রিমাইন্ডার।</string>
+    <string name="notif_meal_title">মিল আপডেট রিমাইন্ডার</string>
+    <string name="notif_meal_body">আজ রাতের মিল সাইকেলের জন্য দুপুর ১:০০ (BST) এর আগে আপনার মিল চালু/বন্ধ আপডেট করুন।</string>
+    <string name="notif_study_title">পড়াশোনার রিমাইন্ডার</string>
+    <string name="notif_study_body_default">MessMate-এ আপনার নির্ধারিত পড়াশোনার সেশনের সময় হয়েছে।</string>
+
+    <!-- About MessMate -->
+    <string name="about_section_title">MessMate সম্পর্কে</string>
+    <string name="about_version_label">ভার্সন</string>
+    <string name="about_developed_by">তৈরি করেছেন</string>
+    <string name="about_developer_name">Billal Hossain</string>
+    <string name="about_copyright">© 2026 Billal Hossain. All rights reserved.</string>
+    <string name="about_description">MessMate মেসে বসবাসকারী শিক্ষার্থীদের জন্য একটি সহজ ও স্মার্ট অফলাইন সঙ্গী। আপনার প্রতিদিনের মিল, চালের হিসাব, পড়াশোনার সেশন এবং ব্যক্তিগত রেকর্ড এক জায়গায় পরিচালনা করুন।</string>
+    <string name="about_contact_whatsapp">WhatsApp-এ যোগাযোগ করুন</string>
+</resources>

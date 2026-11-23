@@ -5,9 +5,9 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,12 +20,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PictureAsPdf
@@ -33,16 +36,11 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.outlined.ReceiptLong
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -55,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -71,6 +70,13 @@ import com.example.ui.components.ConfirmDeleteDialog
 import com.example.ui.components.EmptyStateBox
 import com.example.ui.components.MessCard
 import com.example.ui.components.StatusPill
+import com.example.ui.components.WarmActionPill
+import com.example.ui.components.WarmGradientButton
+import com.example.ui.components.WarmHeroCard
+import com.example.ui.components.WarmIconBadge
+import com.example.ui.components.WarmOutlinedButton
+import com.example.ui.components.WarmSegmentedTabBar
+import com.example.ui.components.warmMeshBackground
 import com.example.ui.theme.LocalMessMateColors
 import com.example.ui.viewmodel.CalendarRecordsViewModel
 import com.example.ui.viewmodel.MessMateViewModel
@@ -99,6 +105,7 @@ fun RecordsScreen(
     val monthMealSummary by calendarViewModel.monthMealSummary.collectAsStateWithLifecycle()
     val monthStudyStats by calendarViewModel.monthStudyStats.collectAsStateWithLifecycle()
     val pdfState by calendarViewModel.pdfState.collectAsStateWithLifecycle()
+    val extraColors = LocalMessMateColors.current
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf(
@@ -111,76 +118,117 @@ fun RecordsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .warmMeshBackground()
     ) {
-        // Header + Calendar button
+        // Header + Calendar pill button
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 6.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = stringResource(R.string.records_title),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.SemiBold
-            )
-            OutlinedButton(
-                onClick = onOpenCalendar,
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.testTag("records_open_calendar")
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.weight(1f)
             ) {
-                Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(stringResource(R.string.action_calendar))
-            }
-        }
-
-        // Month selector strip
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = { calendarViewModel.previousMonth() },
-                modifier = Modifier.testTag("records_prev_month")
-            ) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous month")
-            }
-            Text(
-                text = Formatters.formatMonthYear(selectedMonth, locale),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.SemiBold
-            )
-            IconButton(
-                onClick = { calendarViewModel.nextMonth() },
-                modifier = Modifier.testTag("records_next_month")
-            ) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next month")
-            }
-        }
-
-        ScrollableTabRow(
-            selectedTabIndex = selectedTab,
-            containerColor = MaterialTheme.colorScheme.background,
-            edgePadding = 16.dp,
-            divider = {}
-        ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = { Text(title, maxLines = 1) },
-                    modifier = Modifier.testTag("records_tab_$index")
+                WarmIconBadge(
+                    icon = Icons.Default.BarChart,
+                    tint = extraColors.success,
+                    containerColor = extraColors.successContainer,
+                    borderColor = extraColors.success.copy(alpha = 0.25f),
+                    size = 40.dp,
+                    iconSize = 20.dp
+                )
+                Text(
+                    text = stringResource(R.string.records_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.ExtraBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            WarmActionPill(
+                text = stringResource(R.string.action_calendar),
+                icon = Icons.Default.CalendarMonth,
+                onClick = onOpenCalendar,
+                modifier = Modifier.testTag("records_open_calendar")
+            )
         }
+
+        // Month selector pill card
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(18.dp),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, extraColors.divider)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    onClick = { calendarViewModel.previousMonth() },
+                    shape = CircleShape,
+                    color = extraColors.surfaceLow,
+                    border = BorderStroke(1.dp, extraColors.divider),
+                    modifier = Modifier
+                        .size(38.dp)
+                        .testTag("records_prev_month")
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                            contentDescription = "Previous month",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+                Text(
+                    text = Formatters.formatMonthYear(selectedMonth, locale),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Surface(
+                    onClick = { calendarViewModel.nextMonth() },
+                    shape = CircleShape,
+                    color = extraColors.surfaceLow,
+                    border = BorderStroke(1.dp, extraColors.divider),
+                    modifier = Modifier
+                        .size(38.dp)
+                        .testTag("records_next_month")
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = "Next month",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        WarmSegmentedTabBar(
+            tabs = tabs,
+            selectedIndex = selectedTab,
+            onSelect = { selectedTab = it },
+            tagPrefix = "records_tab",
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
 
         when (selectedTab) {
             0 -> RiceHistoryTab(
@@ -295,13 +343,13 @@ private fun RiceHistoryTab(
                 CompactStatCard(
                     label = stringResource(R.string.rice_total_added),
                     value = Formatters.formatKg(summary.totalAddedKg),
-                    accentColor = extraColors.mealBlue,
+                    accentColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
                 CompactStatCard(
                     label = stringResource(R.string.rice_total_adjusted),
                     value = Formatters.formatSignedKg(summary.totalAdjustmentsKg),
-                    accentColor = MaterialTheme.colorScheme.primary,
+                    accentColor = extraColors.amber,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -312,26 +360,21 @@ private fun RiceHistoryTab(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Button(
+                WarmGradientButton(
+                    text = stringResource(R.string.rice_add_title),
+                    icon = Icons.Default.Add,
                     onClick = onOpenAddRice,
-                    shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.weight(1f)
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(stringResource(R.string.rice_add_title), maxLines = 1)
-                }
-                OutlinedButton(
+                )
+                WarmOutlinedButton(
+                    text = stringResource(R.string.rice_adjust_title),
+                    icon = Icons.Default.Tune,
+                    contentColor = MaterialTheme.colorScheme.primary,
                     onClick = { showAdjustmentDialog = true },
-                    shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
                         .weight(1f)
                         .testTag("rice_manual_adjustment_button")
-                ) {
-                    Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(stringResource(R.string.rice_adjust_title), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
+                )
             }
         }
 
@@ -412,20 +455,20 @@ private fun MealStatsTab(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
+                    StatusPill(
                         text = "${stringResource(R.string.meal_breakfast)}: ${summary.breakfastCounted}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = extraColors.flameMid,
+                        containerColor = extraColors.amberContainer
                     )
-                    Text(
+                    StatusPill(
                         text = "${stringResource(R.string.meal_lunch)}: ${summary.lunchCounted}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.primary,
+                        containerColor = extraColors.primarySoft
                     )
-                    Text(
+                    StatusPill(
                         text = "${stringResource(R.string.meal_dinner)}: ${summary.dinnerCounted}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = extraColors.success,
+                        containerColor = extraColors.successContainer
                     )
                 }
             }
@@ -438,29 +481,38 @@ private fun MealStatsTab(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(18.dp))
                     .clickable { date?.let(onOpenDateDetail) },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(18.dp),
                 color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, extraColors.divider)
+                border = BorderStroke(1.dp, extraColors.divider),
+                shadowElevation = if (extraColors.isDark) 0.dp else 1.dp
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = date?.let { Formatters.formatDisplayDate(it, locale) } ?: dateIso,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Bold
                     )
                     if (isOff) {
-                        StatusPill(text = stringResource(R.string.calendar_legend_off), color = extraColors.danger)
+                        StatusPill(
+                            text = stringResource(R.string.calendar_legend_off),
+                            color = extraColors.danger,
+                            containerColor = extraColors.dangerContainer
+                        )
                     } else {
-                        StatusPill(text = "$counted / ${dayMeals.size}", color = extraColors.mealBlue)
+                        StatusPill(
+                            text = "$counted / ${dayMeals.size}",
+                            color = extraColors.success,
+                            containerColor = extraColors.successContainer
+                        )
                     }
                 }
             }
@@ -491,25 +543,26 @@ private fun StudyStatsTab(stats: com.example.data.repository.StudyStatistics) {
                 CompactStatCard(
                     label = stringResource(R.string.study_stats_streak),
                     value = stringResource(R.string.study_stats_streak_days, stats.currentStreakDays),
-                    accentColor = extraColors.mealBlue,
+                    accentColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
             }
         }
 
         item {
-            MessCard {
+            WarmHeroCard {
                 Text(
                     text = stringResource(R.string.study_stats_top_subject),
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = stats.mostStudiedSubject ?: stringResource(R.string.label_none),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.ExtraBold
                 )
             }
         }
@@ -519,7 +572,8 @@ private fun StudyStatsTab(stats: com.example.data.repository.StudyStatistics) {
                 Text(
                     text = stringResource(R.string.study_stats_subject_breakdown),
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.ExtraBold
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 if (stats.subjectBreakdown.isEmpty()) {
@@ -533,24 +587,24 @@ private fun StudyStatsTab(stats: com.example.data.repository.StudyStatistics) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 9.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = if (item.subjectCode.isNotBlank()) "${item.subjectName} (${item.subjectCode})" else item.subjectName,
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
-                            Text(
+                            Spacer(modifier = Modifier.width(8.dp))
+                            StatusPill(
                                 text = Formatters.formatDurationSeconds(item.totalSeconds),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = extraColors.studyGreen,
-                                fontWeight = FontWeight.SemiBold
+                                color = extraColors.success,
+                                containerColor = extraColors.successContainer
                             )
                         }
                         if (idx < stats.subjectBreakdown.lastIndex) {
@@ -630,60 +684,66 @@ private fun MonthlyReportsTab(
             MessCard {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Description,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                    WarmIconBadge(
+                        icon = Icons.Default.Description,
+                        tint = MaterialTheme.colorScheme.primary,
+                        containerColor = extraColors.primarySoft,
+                        borderColor = extraColors.primarySoftBorder,
+                        size = 38.dp,
+                        iconSize = 19.dp
                     )
                     Text(
                         text = stringResource(R.string.records_monthly_report_title),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.ExtraBold
                     )
                 }
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 SummaryLine(stringResource(R.string.records_counted_meals), mealSummary.countedMeals.toString())
                 SummaryLine(stringResource(R.string.records_skipped_meals), mealSummary.skippedMeals.toString())
                 SummaryLine(stringResource(R.string.records_off_days), mealSummary.offDays.toString())
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = extraColors.divider)
+                HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = extraColors.divider)
                 SummaryLine(stringResource(R.string.pdf_rice_contribution), Formatters.formatKg(riceSummary.totalAddedKg))
                 SummaryLine(stringResource(R.string.pdf_rice_consumption), Formatters.formatKg(riceSummary.totalConsumedKg))
                 SummaryLine(stringResource(R.string.pdf_rice_remaining), Formatters.formatKg(riceSummary.remainingStockKg))
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = extraColors.divider)
+                HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp), color = extraColors.divider)
                 SummaryLine(stringResource(R.string.records_total_study), Formatters.formatDurationHoursMinutes(studyStats.monthlySeconds))
             }
         }
 
         item {
             MessCard {
-                Button(
-                    onClick = {
-                        calendarViewModel.generateMonthlyPdf(
-                            localizedContext = context,
-                            locale = locale
-                        )
-                    },
-                    enabled = !pdfState.isGenerating,
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .testTag("generate_pdf_button")
-                ) {
-                    if (pdfState.isGenerating) {
+                if (pdfState.isGenerating) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary
+                            modifier = Modifier.size(26.dp),
+                            strokeWidth = 3.dp,
+                            color = MaterialTheme.colorScheme.primary
                         )
-                    } else {
-                        Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.records_generate_pdf))
+                } else {
+                    WarmGradientButton(
+                        text = stringResource(R.string.records_generate_pdf),
+                        icon = Icons.Default.PictureAsPdf,
+                        onClick = {
+                            calendarViewModel.generateMonthlyPdf(
+                                localizedContext = context,
+                                locale = locale
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("generate_pdf_button")
+                    )
                 }
 
                 val readyFile = pdfState.generatedFile?.takeIf {
@@ -691,52 +751,45 @@ private fun MonthlyReportsTab(
                 }
 
                 if (readyFile != null) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
+                    Spacer(modifier = Modifier.height(12.dp))
+                    StatusPill(
                         text = stringResource(R.string.records_pdf_ready, readyFile.name),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = extraColors.success
+                        color = extraColors.success,
+                        containerColor = extraColors.successContainer,
+                        icon = Icons.Default.CheckCircle
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedButton(
+                        WarmOutlinedButton(
+                            text = stringResource(R.string.records_preview_pdf),
+                            icon = Icons.Default.Visibility,
+                            contentColor = MaterialTheme.colorScheme.primary,
                             onClick = { onPreviewPdf(readyFile.absolutePath) },
-                            shape = RoundedCornerShape(10.dp),
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("preview_pdf_button")
-                        ) {
-                            Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.records_preview_pdf), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                        OutlinedButton(
+                        )
+                        WarmOutlinedButton(
+                            text = stringResource(R.string.records_save_pdf),
+                            icon = Icons.Default.Download,
                             onClick = { saveDocumentLauncher.launch(readyFile.name) },
-                            shape = RoundedCornerShape(10.dp),
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("save_pdf_button")
-                        ) {
-                            Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.records_save_pdf), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
+                        )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedButton(
+                    WarmOutlinedButton(
+                        text = stringResource(R.string.records_share_pdf),
+                        icon = Icons.Default.Share,
                         onClick = { sharePdfFile(readyFile) },
-                        shape = RoundedCornerShape(10.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("share_pdf_button")
-                    ) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.records_share_pdf))
-                    }
+                    )
                 }
 
                 pdfState.error?.let {
@@ -757,7 +810,7 @@ private fun SummaryLine(label: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 5.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
@@ -767,9 +820,9 @@ private fun SummaryLine(label: String, value: String) {
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.ExtraBold
         )
     }
 }

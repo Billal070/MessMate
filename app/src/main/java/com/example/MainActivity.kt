@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val preferencesOrNull by messViewModel.preferencesState.collectAsStateWithLifecycle()
-            val themeMode = preferencesOrNull?.themeMode ?: ThemeMode.DARK
+            val themeMode = preferencesOrNull?.themeMode ?: ThemeMode.LIGHT
             val language = preferencesOrNull?.language ?: AppLanguage.EN
 
             val isDark = when (themeMode) {

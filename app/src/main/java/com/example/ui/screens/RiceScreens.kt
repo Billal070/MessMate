@@ -1,6 +1,5 @@
 package com.example.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,23 +14,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.RiceBowl
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,6 +46,13 @@ import com.example.R
 import com.example.data.local.RiceTransactionEntity
 import com.example.data.local.RiceTransactionType
 import com.example.ui.components.MessCard
+import com.example.ui.components.WarmGradientButton
+import com.example.ui.components.WarmHeroCard
+import com.example.ui.components.WarmIconBadge
+import com.example.ui.components.WarmOutlinedButton
+import com.example.ui.components.WarmTopBar
+import com.example.ui.components.warmMeshBackground
+import com.example.ui.components.warmTextFieldColors
 import com.example.ui.theme.LocalMessMateColors
 import com.example.ui.viewmodel.MessMateViewModel
 import com.example.util.Formatters
@@ -97,11 +98,11 @@ fun AddRiceScreen(
                         }
                         showDatePicker = false
                     }
-                ) { Text(stringResource(R.string.action_confirm)) }
+                ) { Text(stringResource(R.string.action_confirm), fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text(stringResource(R.string.action_cancel))
+                    Text(stringResource(R.string.action_cancel), fontWeight = FontWeight.Bold)
                 }
             }
         ) {
@@ -109,66 +110,71 @@ fun AddRiceScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.rice_add_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        }
-    ) { innerPadding ->
+    val fieldColors = warmTextFieldColors()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .warmMeshBackground()
+            .imePadding()
+    ) {
+        WarmTopBar(
+            title = stringResource(R.string.rice_add_title),
+            onNavigateBack = onNavigateBack
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(innerPadding)
-                .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Current & Projected Stock Summary
-            MessCard {
+            WarmHeroCard {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.rice_current_stock_label),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        WarmIconBadge(
+                            icon = Icons.Default.RiceBowl,
+                            tint = MaterialTheme.colorScheme.primary,
+                            containerColor = extraColors.primarySoft,
+                            borderColor = extraColors.primarySoftBorder
                         )
-                        Text(
-                            text = Formatters.formatKg(currentStock),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = if (currentStock < 0) extraColors.danger else MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Column {
+                            Text(
+                                text = stringResource(R.string.rice_current_stock_label),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = Formatters.formatKg(currentStock),
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = if (currentStock < 0) extraColors.danger else MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
                     }
+
                     if (parsedQty != null && parsedQty > 0.0) {
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "→",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = extraColors.success
+                                text = "+${Formatters.formatKg(parsedQty)}",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = extraColors.success,
+                                fontWeight = FontWeight.ExtraBold
                             )
                             Text(
                                 text = Formatters.formatKg(previewStock),
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.headlineSmall,
                                 color = extraColors.success,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.ExtraBold
                             )
                         }
                     }
@@ -188,27 +194,24 @@ fun AddRiceScreen(
                     isError = errorMessage != null,
                     supportingText = errorMessage?.let { msg -> { Text(msg) } },
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("add_rice_quantity_input")
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                OutlinedButton(
+                WarmOutlinedButton(
+                    text = "${stringResource(R.string.label_date)}: ${Formatters.formatShortDate(selectedDate, locale)}",
+                    icon = Icons.Default.CalendarToday,
+                    contentColor = MaterialTheme.colorScheme.primary,
                     onClick = { showDatePicker = true },
-                    shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(imageVector = Icons.Default.CalendarToday, contentDescription = null)
-                    Spacer(modifier = Modifier.height(0.dp))
-                    Text(
-                        text = "  ${stringResource(R.string.label_date)}: ${Formatters.formatShortDate(selectedDate, locale)}"
-                    )
-                }
+                )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 OutlinedTextField(
                     value = noteText,
@@ -216,7 +219,8 @@ fun AddRiceScreen(
                     label = { Text(stringResource(R.string.label_note_optional)) },
                     singleLine = false,
                     maxLines = 3,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("add_rice_note_input")
@@ -224,13 +228,16 @@ fun AddRiceScreen(
             }
 
             val invalidPositiveMsg = stringResource(R.string.rice_quantity_error_positive)
-            Button(
+            WarmGradientButton(
+                text = stringResource(R.string.action_save),
+                icon = Icons.Default.Save,
+                enabled = !isSaving,
                 onClick = {
-                    if (isSaving) return@Button
+                    if (isSaving) return@WarmGradientButton
                     val qty = quantityText.trim().toDoubleOrNull()
                     if (qty == null || !qty.isFinite() || qty <= 0.0) {
                         errorMessage = invalidPositiveMsg
-                        return@Button
+                        return@WarmGradientButton
                     }
                     isSaving = true
                     scope.launch {
@@ -243,15 +250,10 @@ fun AddRiceScreen(
                         }
                     }
                 },
-                enabled = !isSaving,
-                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
                     .testTag("add_rice_save_button")
-            ) {
-                Text(stringResource(R.string.action_save))
-            }
+            )
         }
     }
 }
@@ -265,12 +267,20 @@ fun ManualRiceAdjustmentDialog(
     var quantityText by remember { mutableStateOf("") }
     var noteText by remember { mutableStateOf("") }
     var hasError by remember { mutableStateOf(false) }
+    val fieldColors = warmTextFieldColors()
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.rice_adjust_title)) },
+        shape = RoundedCornerShape(24.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = {
+            Text(
+                stringResource(R.string.rice_adjust_title),
+                fontWeight = FontWeight.ExtraBold
+            )
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = quantityText,
                     onValueChange = {
@@ -285,7 +295,8 @@ fun ManualRiceAdjustmentDialog(
                         { Text(stringResource(R.string.rice_quantity_error_nonzero)) }
                     } else null,
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
@@ -293,13 +304,14 @@ fun ManualRiceAdjustmentDialog(
                     onValueChange = { noteText = it },
                     label = { Text(stringResource(R.string.label_note_optional)) },
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = {
                     val qty = quantityText.trim().toDoubleOrNull()
                     if (qty == null || !qty.isFinite() || qty == 0.0) {
@@ -307,11 +319,14 @@ fun ManualRiceAdjustmentDialog(
                     } else {
                         onSave(qty, initialDate, noteText)
                     }
-                }
-            ) { Text(stringResource(R.string.action_save)) }
+                },
+                shape = RoundedCornerShape(12.dp)
+            ) { Text(stringResource(R.string.action_save), fontWeight = FontWeight.Bold) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel), fontWeight = FontWeight.Bold)
+            }
         }
     )
 }
@@ -325,12 +340,20 @@ fun EditRiceTransactionDialog(
     var quantityText by remember { mutableStateOf(transaction.quantityKg.toString()) }
     var noteText by remember { mutableStateOf(transaction.note) }
     var hasError by remember { mutableStateOf(false) }
+    val fieldColors = warmTextFieldColors()
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.rice_edit_title)) },
+        shape = RoundedCornerShape(24.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = {
+            Text(
+                stringResource(R.string.rice_edit_title),
+                fontWeight = FontWeight.ExtraBold
+            )
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = quantityText,
                     onValueChange = {
@@ -352,7 +375,8 @@ fun EditRiceTransactionDialog(
                         }
                     } else null,
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
@@ -360,13 +384,14 @@ fun EditRiceTransactionDialog(
                     onValueChange = { noteText = it },
                     label = { Text(stringResource(R.string.label_note_optional)) },
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = {
                     val qty = quantityText.trim().toDoubleOrNull()
                     val valid = when (transaction.type) {
@@ -379,11 +404,14 @@ fun EditRiceTransactionDialog(
                     } else {
                         onSave(transaction.copy(quantityKg = qty!!, note = noteText.trim()))
                     }
-                }
-            ) { Text(stringResource(R.string.action_save)) }
+                },
+                shape = RoundedCornerShape(12.dp)
+            ) { Text(stringResource(R.string.action_save), fontWeight = FontWeight.Bold) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel), fontWeight = FontWeight.Bold)
+            }
         }
     )
 }

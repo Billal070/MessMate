@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Subtle inner navy badge -->
+    <path
+        android:fillColor="#192538"
+        android:pathData="M54,24A30,30 0 1,1 53.99,24Z" />
+    <!-- Geometric bowl silhouette (Primary Blue) -->
+    <path
+        android:fillColor="#6C9EFF"
+        android:pathData="M33,53H75C75,65.15 65.6,74 54,74C42.4,74 33,65.15 33,53Z" />
+    <!-- Open book / accent arc above bowl (Success Green) -->
+    <path
+        android:fillColor="#79D6B3"
+        android:pathData="M39,46C39,41.58 45.72,38 54,38C62.28,38 69,41.58 69,46V49H39V46Z" />
+    <!-- Center M-crest accent -->
+    <path
+        android:fillColor="#F1F5F9"
+        android:pathData="M45,58L49,66L54,60L59,66L63,58H60L58,62.2L54,57.2L50,62.2L48,58H45Z" />
+</vector>

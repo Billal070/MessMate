@@ -1,0 +1,70 @@
+package com.example.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+// Warm Cream & Kinetic Coral Light Palette (Primary Brand Theme)
+val WarmBackground = Color(0xFFFFF5F0)
+val WarmBackgroundTop = Color(0xFFFFF8F4)
+val WarmBackgroundPeach = Color(0xFFFFEFE8)
+val WarmSurface = Color(0xFFFFFFFF)
+val WarmSurfaceLow = Color(0xFFFFF8F4)
+val WarmSurfaceElevated = Color(0xFFFFF0E8)
+val WarmSurfaceContainer = Color(0xFFFEE6DB)
+
+val FlamePrimary = Color(0xFFF83D11)
+val FlameOrange = Color(0xFFF37F0C)
+val FlameGold = Color(0xFFFF9E2C)
+val FlameSoftContainer = Color(0xFFFFEBE4)
+val FlameSoftBorder = Color(0xFFFFD8CA)
+
+val WarmAmber = Color(0xFFD95300)
+val WarmAmberContainer = Color(0xFFFFE8D6)
+val WarmAmberBorder = Color(0xFFFCD0BE)
+
+val WarmEmerald = Color(0xFF00875A)
+val WarmEmeraldBright = Color(0xFF00A36C)
+val WarmEmeraldContainer = Color(0xFFD6F8EB)
+val WarmEmeraldDarkText = Color(0xFF006644)
+
+val WarmPrimaryText = Color(0xFF16100E)
+val WarmSecondaryText = Color(0xFF76746F)
+val WarmDivider = Color(0xFFFEE6DB)
+val WarmOutlineStrong = Color(0xFFF1D3C7)
+val WarmDanger = Color(0xFFD32F2F)
+val WarmDangerContainer = Color(0xFFFFEBEE)
+val WarmWarning = Color(0xFFE65100)
+val WarmWarningContainer = Color(0xFFFFF0E0)
+val WarmNeutralGrey = Color(0xFFA89F9A)
+
+// Warm Espresso Dark Palette (Cohesive Dark Mode Option)
+val EspressoBackground = Color(0xFF171210)
+val EspressoBackgroundTop = Color(0xFF1E1714)
+val EspressoBackgroundPeach = Color(0xFF281C17)
+val EspressoSurface = Color(0xFF231B18)
+val EspressoSurfaceLow = Color(0xFF2B211D)
+val EspressoSurfaceElevated = Color(0xFF352924)
+val EspressoSurfaceContainer = Color(0xFF3F302A)
+
+val DarkFlamePrimary = Color(0xFFFF6238)
+val DarkFlameOrange = Color(0xFFFF9B35)
+val DarkFlameGold = Color(0xFFFFB65C)
+val DarkFlameSoftContainer = Color(0xFF3E221A)
+val DarkFlameSoftBorder = Color(0xFF5D3427)
+
+val DarkAmber = Color(0xFFFFA94D)
+val DarkAmberContainer = Color(0xFF3D2A19)
+val DarkAmberBorder = Color(0xFF5B3F26)
+
+val DarkEmerald = Color(0xFF2DD49A)
+val DarkEmeraldBright = Color(0xFF3EE4AB)
+val DarkEmeraldContainer = Color(0xFF14362B)
+
+val DarkWarmPrimaryText = Color(0xFFFFF6F2)
+val DarkWarmSecondaryText = Color(0xFFB8ACA6)
+val DarkWarmDivider = Color(0xFF3B2E29)
+val DarkWarmOutlineStrong = Color(0xFF524039)
+val DarkWarmDanger = Color(0xFFFF6B6B)
+val DarkWarmDangerContainer = Color(0xFF3D1E1E)
+val DarkWarmWarning = Color(0xFFFFB04F)
+val DarkWarmWarningContainer = Color(0xFF3D2C19)
+val DarkWarmNeutralGrey = Color(0xFF857973)

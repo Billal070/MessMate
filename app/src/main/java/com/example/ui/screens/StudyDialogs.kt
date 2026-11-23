@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -21,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.R
@@ -28,6 +31,7 @@ import com.example.data.local.PresetCatalog
 import com.example.data.local.StudySessionEntity
 import com.example.data.local.SubjectEntity
 import com.example.ui.components.localizedSemesterName
+import com.example.ui.components.warmTextFieldColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,13 +73,17 @@ fun SubjectFormDialog(
 
     var semExpanded by remember { mutableStateOf(false) }
     var techExpanded by remember { mutableStateOf(false) }
+    val fieldColors = warmTextFieldColors()
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(24.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
         title = {
             Text(
-                if (initialSubject == null) stringResource(R.string.study_add_subject)
-                else stringResource(R.string.study_edit_subject)
+                text = if (initialSubject == null) stringResource(R.string.study_add_subject)
+                else stringResource(R.string.study_edit_subject),
+                fontWeight = FontWeight.ExtraBold
             )
         },
         text = {
@@ -87,12 +95,17 @@ fun SubjectFormDialog(
                         readOnly = true,
                         label = { Text(stringResource(R.string.setup_semester_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = semExpanded) },
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = fieldColors,
                         modifier = Modifier
                             .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                             .fillMaxWidth()
                     )
-                    ExposedDropdownMenu(expanded = semExpanded, onDismissRequest = { semExpanded = false }) {
+                    ExposedDropdownMenu(
+                        expanded = semExpanded,
+                        onDismissRequest = { semExpanded = false },
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ) {
                         PresetCatalog.SEMESTERS.forEach { sem ->
                             DropdownMenuItem(
                                 text = { Text(localizedSemesterName(sem)) },
@@ -112,12 +125,17 @@ fun SubjectFormDialog(
                         readOnly = true,
                         label = { Text(stringResource(R.string.setup_department_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = techExpanded) },
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = fieldColors,
                         modifier = Modifier
                             .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                             .fillMaxWidth()
                     )
-                    ExposedDropdownMenu(expanded = techExpanded, onDismissRequest = { techExpanded = false }) {
+                    ExposedDropdownMenu(
+                        expanded = techExpanded,
+                        onDismissRequest = { techExpanded = false },
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ) {
                         (PresetCatalog.SUPPORTED_TECHNOLOGIES + PresetCatalog.OTHER_CUSTOM_TECH).forEach { tech ->
                             DropdownMenuItem(
                                 text = {
@@ -139,7 +157,8 @@ fun SubjectFormDialog(
                         onValueChange = { customTech = it },
                         label = { Text(stringResource(R.string.setup_custom_department_label)) },
                         singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = fieldColors,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -153,7 +172,8 @@ fun SubjectFormDialog(
                         { Text(stringResource(R.string.study_subject_name_error)) }
                     } else null,
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -162,13 +182,14 @@ fun SubjectFormDialog(
                     onValueChange = { code = it },
                     label = { Text(stringResource(R.string.study_subject_code_label)) },
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = {
                     if (name.trim().isEmpty()) {
                         nameError = true
@@ -178,11 +199,14 @@ fun SubjectFormDialog(
                         } else selectedTech
                         onSave(finalTech, semester, name.trim(), code.trim())
                     }
-                }
-            ) { Text(stringResource(R.string.action_save)) }
+                },
+                shape = RoundedCornerShape(12.dp)
+            ) { Text(stringResource(R.string.action_save), fontWeight = FontWeight.Bold) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel), fontWeight = FontWeight.Bold)
+            }
         }
     )
 }
@@ -198,10 +222,18 @@ fun EditStudySessionDialog(
         mutableStateOf(((session.durationSeconds + 59) / 60).coerceAtLeast(1).toString())
     }
     var hasError by remember { mutableStateOf(false) }
+    val fieldColors = warmTextFieldColors()
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.study_session_edit_title)) },
+        shape = RoundedCornerShape(24.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = {
+            Text(
+                stringResource(R.string.study_session_edit_title),
+                fontWeight = FontWeight.ExtraBold
+            )
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
@@ -209,7 +241,8 @@ fun EditStudySessionDialog(
                     onValueChange = { subjectName = it; hasError = false },
                     label = { Text(stringResource(R.string.study_subject_name_label)) },
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
@@ -222,13 +255,14 @@ fun EditStudySessionDialog(
                         { Text(stringResource(R.string.study_session_duration_error)) }
                     } else null,
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = {
                     val mins = durationMinutes.trim().toLongOrNull()
                     if (subjectName.trim().isEmpty() || mins == null || mins <= 0L) {
@@ -243,11 +277,14 @@ fun EditStudySessionDialog(
                             )
                         )
                     }
-                }
-            ) { Text(stringResource(R.string.action_save)) }
+                },
+                shape = RoundedCornerShape(12.dp)
+            ) { Text(stringResource(R.string.action_save), fontWeight = FontWeight.Bold) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel), fontWeight = FontWeight.Bold)
+            }
         }
     )
 }

@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MessMate</string>
+    <string name="app_version">1.0.0</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_meals">Meals</string>
+    <string name="nav_study">Study</string>
+    <string name="nav_records">Records</string>
+
+    <!-- Common Actions & Labels -->
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_add">Add</string>
+    <string name="action_back">Back</string>
+    <string name="action_close">Close</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_calendar">Calendar</string>
+    <string name="action_profile">Profile</string>
+    <string name="action_finish_setup">Finish Setup</string>
+    <string name="action_skip_optional">Skip Optional Fields</string>
+    <string name="label_optional">Optional</string>
+    <string name="label_all">All</string>
+    <string name="label_none">None</string>
+    <string name="label_date">Date</string>
+    <string name="label_note_optional">Note (optional)</string>
+
+    <!-- Semesters & Technologies -->
+    <string name="semester_1">1st Semester</string>
+    <string name="semester_2">2nd Semester</string>
+    <string name="semester_3">3rd Semester</string>
+    <string name="semester_4">4th Semester</string>
+    <string name="semester_5">5th Semester</string>
+    <string name="semester_6">6th Semester</string>
+    <string name="semester_7">7th Semester</string>
+    <string name="semester_8">8th Semester</string>
+    <string name="tech_other_custom">Other / Custom</string>
+
+    <!-- First-Launch Setup -->
+    <string name="setup_title">Welcome to MessMate</string>
+    <string name="setup_subtitle">Set up your personal offline profile to track meals, rice stock, and study sessions.</string>
+    <string name="setup_language_label">Preferred Language</string>
+    <string name="setup_photo_label">Profile Photo</string>
+    <string name="setup_photo_hint">Stored locally on your device</string>
+    <string name="setup_photo_pick">Choose Photo</string>
+    <string name="setup_photo_change">Change</string>
+    <string name="setup_photo_remove">Remove</string>
+    <string name="setup_name_label">Your Name *</string>
+    <string name="setup_name_placeholder">Enter your full name</string>
+    <string name="setup_name_error">Please enter your name to continue.</string>
+    <string name="setup_mess_label">Mess Name</string>
+    <string name="setup_mess_placeholder">e.g. Green View Student Mess</string>
+    <string name="setup_institution_label">Institution Name</string>
+    <string name="setup_institution_placeholder">e.g. Dhaka Polytechnic Institute</string>
+    <string name="setup_department_label">Department / Technology</string>
+    <string name="setup_custom_department_label">Custom Department / Technology</string>
+    <string name="setup_semester_label">Semester</string>
+    <string name="setup_permission_notifications_title">Reminder Notifications</string>
+    <string name="setup_permission_notifications_desc">Allow notifications for the daily 12:00 PM meal deadline reminder and your custom study reminders.</string>
+    <string name="setup_permission_grant">Allow Notifications</string>
+    <string name="setup_permission_granted">Notifications enabled</string>
+    <string name="setup_permission_denied_note">You can continue without notifications and enable them later in device settings.</string>
+
+    <!-- Home Dashboard -->
+    <string name="home_greeting">Hello, %1$s</string>
+    <string name="home_todays_meals">Today\'s Meals</string>
+    <string name="home_meal_cycle_on_badge">Meal ON</string>
+    <string name="home_meal_cycle_off_badge">Meal OFF</string>
+    <string name="home_rice_stock">Personal Rice Stock</string>
+    <string name="home_rice_low_warning">Low rice stock (2.00 kg or less). Consider adding rice soon.</string>
+    <string name="home_rice_negative_warning">Negative rice balance. Add your next rice deposit to settle the balance.</string>
+    <string name="home_study_progress">Today\'s Study Progress</string>
+    <string name="home_study_goal_of">Goal: %1$s</string>
+    <string name="home_recent_activity">Recent Activity</string>
+    <string name="home_no_recent_activity">No recent activity yet. Add rice, start studying, or manage meals to get started.</string>
+    <string name="quick_add_rice">Add Rice</string>
+    <string name="quick_start_study">Start Study</string>
+    <string name="quick_manage_meals">Manage Meals</string>
+    <string name="home_quick_actions">Quick Actions</string>
+    <string name="home_view_all">View All</string>
+    <string name="home_meals_counted_summary">%1$d of 3 meals counted</string>
+    <string name="home_study_goal_reached">%1$d%% of daily target reached</string>
+    <string name="home_per_day_rate">%1$s / day</string>
+    <string name="home_last_focus">Last focus: %1$s (%2$s)</string>
+    <string name="home_offline_status">Offline &amp; Private</string>
+    <string name="calendar_am_cycle_status">AM Cycle: %1$s</string>
+    <string name="calendar_dinner_cycle_status">Dinner Cycle: %1$s</string>
+
+    <!-- Meals -->
+    <string name="meals_title">Meal Management</string>
+    <string name="meal_breakfast">Breakfast</string>
+    <string name="meal_lunch">Lunch</string>
+    <string name="meal_dinner">Dinner</string>
+    <string name="meal_time_breakfast">8:00 AM BST</string>
+    <string name="meal_time_lunch">12:00 PM BST</string>
+    <string name="meal_time_dinner">8:00 PM BST</string>
+    <string name="meal_on">Meal ON</string>
+    <string name="meal_off">Meal OFF</string>
+    <string name="meal_status_pending">Pending</string>
+    <string name="meal_status_counted">Counted</string>
+    <string name="meal_status_skipped">Skipped</string>
+    <string name="meal_status_off">Meal OFF</string>
+    <string name="meal_toggle_title">Meal Status (Persistent)</string>
+    <string name="meal_toggle_subtitle_on">Meals are automatically counted at scheduled BST times until you turn Meal OFF.</string>
+    <string name="meal_toggle_subtitle_off">Meals remain OFF for upcoming cycles until you turn Meal ON again.</string>
+    <string name="meal_deadline_before_1pm">Before 1:00 PM BST — changes apply from tonight\'s Dinner cycle (%1$s).</string>
+    <string name="meal_deadline_grace">Grace Period (1:00–2:00 PM BST) — late update still applies to tonight\'s Dinner cycle (%1$s).</string>
+    <string name="meal_deadline_after_2pm">After 2:00 PM BST — tonight\'s cycle is locked. Changes apply from tomorrow\'s Dinner cycle (%1$s).</string>
+    <string name="meal_grace_warning_title">Grace Period Update</string>
+    <string name="meal_grace_warning_body">You are updating Meal status during the 1:00 PM – 2:00 PM grace period (Bangladesh time). This change will still apply to the upcoming Dinner cycle (%1$s).</string>
+    <string name="meal_after_2pm_notice_title">Scheduled for Next Cycle</string>
+    <string name="meal_after_2pm_notice_body">It is after 2:00 PM Bangladesh time, so today\'s upcoming Dinner cycle is already locked. Your change has been scheduled for the next Meal Cycle starting %1$s.</string>
+    <string name="meal_cycle_card_title">Meal Cycles</string>
+    <string name="meal_cycle_label">Cycle starting %1$s</string>
+    <string name="meal_cycle_desc">Dinner (%1$s) → Breakfast &amp; Lunch (%2$s)</string>
+    <string name="meal_upcoming_scheduled">Scheduled for next cycle (%1$s): %2$s</string>
+    <string name="meal_action_skip">Skip</string>
+    <string name="meal_action_restore">Restore</string>
+    <string name="meal_open_calendar">Open Meal Calendar</string>
+    <string name="meal_rules_title">How Meal Cycles Work</string>
+    <string name="meal_rules_desc">Each Meal Cycle links Dinner (8:00 PM) with next day\'s Breakfast (8:00 AM) and Lunch (12:00 PM) in Bangladesh Standard Time. Update Meal ON/OFF before 1:00 PM (grace until 2:00 PM).</string>
+
+    <!-- Rice -->
+    <string name="rice_add_title">Add Rice Deposit</string>
+    <string name="rice_adjust_title">Manual Stock Adjustment</string>
+    <string name="rice_edit_title">Edit Rice Record</string>
+    <string name="rice_current_stock_label">Current Rice Stock</string>
+    <string name="rice_quantity_label">Quantity (kg)</string>
+    <string name="rice_quantity_adjust_hint">Use positive (+) to add or negative (-) to subtract</string>
+    <string name="rice_quantity_error_positive">Enter a valid quantity greater than 0.</string>
+    <string name="rice_quantity_error_nonzero">Enter a valid non-zero adjustment value.</string>
+    <string name="rice_tx_added">Rice Added</string>
+    <string name="rice_tx_breakfast">Breakfast Deduction</string>
+    <string name="rice_tx_lunch">Lunch Deduction</string>
+    <string name="rice_tx_dinner">Dinner Deduction</string>
+    <string name="rice_tx_adjustment">Manual Adjustment</string>
+    <string name="rice_total_added">Added</string>
+    <string name="rice_total_consumed">Consumed</string>
+    <string name="rice_total_adjusted">Adjustments</string>
+    <string name="rice_empty_history">No rice transactions for this month yet.</string>
+    <string name="rice_auto_deduction_note">Auto-deducted from counted meal</string>
+    <string name="rice_delete_confirm_title">Delete Rice Record?</string>
+    <string name="rice_delete_confirm_body">This will permanently remove this rice transaction and recalculate your stock balance.</string>
+
+    <!-- Study -->
+    <string name="study_title">Study Manager</string>
+    <string name="study_tab_pomodoro">Pomodoro</string>
+    <string name="study_tab_stopwatch">Stopwatch</string>
+    <string name="study_tab_subjects">Subjects</string>
+    <string name="study_tab_history">History</string>
+    <string name="study_mode_focus">Focus</string>
+    <string name="study_mode_short_break">Short Break</string>
+    <string name="study_mode_long_break">Long Break</string>
+    <string name="study_select_subject">Subject</string>
+    <string name="study_no_subject_selected">General Study</string>
+    <string name="study_btn_start">Start</string>
+    <string name="study_btn_pause">Pause</string>
+    <string name="study_btn_resume">Resume</string>
+    <string name="study_btn_reset">Reset</string>
+    <string name="study_btn_stop">Stop</string>
+    <string name="study_pomodoro_complete_title">Focus Session Complete</string>
+    <string name="study_pomodoro_complete_msg">Your focus session (%1$s) has been saved to Study History. Choose your next session manually.</string>
+    <string name="study_break_complete_title">Break Finished</string>
+    <string name="study_break_complete_msg">Break time is over. Breaks are not counted as study time. Start your next Focus session when ready.</string>
+    <string name="study_stopwatch_save_title">Save Study Session?</string>
+    <string name="study_stopwatch_save_msg">Recorded duration: %1$s. Save this stopwatch session to Study History?</string>
+    <string name="study_stopwatch_discard">Discard</string>
+    <string name="study_add_subject">Add Subject</string>
+    <string name="study_edit_subject">Edit Subject</string>
+    <string name="study_subject_name_label">Subject Name *</string>
+    <string name="study_subject_code_label">Subject Code (optional)</string>
+    <string name="study_subject_name_error">Enter a subject name.</string>
+    <string name="study_subjects_empty">No subjects found for this filter. Add a custom subject anytime.</string>
+    <string name="study_subject_delete_title">Delete Subject?</string>
+    <string name="study_subject_delete_msg">Delete \"%1$s\"? Existing study history records will remain preserved.</string>
+    <string name="study_history_empty">No study sessions recorded yet.</string>
+    <string name="study_session_edit_title">Edit Study Session</string>
+    <string name="study_session_duration_min">Duration (minutes)</string>
+    <string name="study_session_duration_error">Enter a duration greater than 0 minutes.</string>
+    <string name="study_session_delete_title">Delete Study Session?</string>
+    <string name="study_session_delete_msg">This will permanently remove this study session from your history and statistics.</string>
+    <string name="study_status_completed">Completed</string>
+    <string name="study_status_stopped">Stopped</string>
+    <string name="study_stats_today">Today</string>
+    <string name="study_stats_weekly">This Week</string>
+    <string name="study_stats_monthly">This Month</string>
+    <string name="study_stats_streak">Study Streak</string>
+    <string name="study_stats_streak_days">%1$d days</string>
+    <string name="study_stats_top_subject">Most Studied</string>
+    <string name="study_stats_subject_breakdown">Subject Breakdown</string>
+
+    <!-- Calendar & Date Detail -->
+    <string name="calendar_title">Combined Calendar</string>
+    <string name="calendar_legend_meal">Meal</string>
+    <string name="calendar_legend_study">Study</string>
+    <string name="calendar_legend_rice">Rice</string>
+    <string name="calendar_legend_off">Meal OFF</string>
+    <string name="calendar_legend_none">No Activity</string>
+    <string name="calendar_day_detail_title">Date Details</string>
+    <string name="calendar_meal_section">Meal Records</string>
+    <string name="calendar_rice_section">Rice Transactions</string>
+    <string name="calendar_study_section">Study Sessions</string>
+    <string name="calendar_set_cycle_on">Turn Cycle ON</string>
+    <string name="calendar_set_cycle_off">Turn Cycle OFF</string>
+    <string name="calendar_add_rice_for_date">Add Rice for Date</string>
+    <string name="calendar_no_rice_day">No rice transactions on this date.</string>
+    <string name="calendar_no_study_day">No study sessions on this date.</string>
+
+    <!-- Records & Monthly Reports -->
+    <string name="records_title">Records &amp; Reports</string>
+    <string name="records_tab_rice">Rice</string>
+    <string name="records_tab_meals">Meals</string>
+    <string name="records_tab_study">Study</string>
+    <string name="records_tab_reports">Reports</string>
+    <string name="records_counted_meals">Counted Meals</string>
+    <string name="records_skipped_meals">Skipped Meals</string>
+    <string name="records_off_days">Meal OFF Days</string>
+    <string name="records_total_study">Total Study Time</string>
+    <string name="records_monthly_report_title">Monthly PDF Report</string>
+    <string name="records_generate_pdf">Generate PDF Report</string>
+    <string name="records_preview_pdf">Preview</string>
+    <string name="records_save_pdf">Save to Device</string>
+    <string name="records_share_pdf">Share</string>
+    <string name="records_pdf_ready">PDF ready: %1$s</string>
+    <string name="records_pdf_saved">PDF saved successfully.</string>
+    <string name="records_pdf_error">Could not generate or save PDF.</string>
+    <string name="records_pdf_preview_title">PDF Report Preview</string>
+    <string name="records_page_indicator">Page %1$d of %2$d</string>
+
+    <!-- PDF Labels -->
+    <string name="pdf_header_title">MessMate Monthly Report</string>
+    <string name="pdf_student_name">Student Name</string>
+    <string name="pdf_mess_name">Mess Name</string>
+    <string name="pdf_institution">Institution</string>
+    <string name="pdf_month">Month</string>
+    <string name="pdf_meal_summary">Meal Summary</string>
+    <string name="pdf_rice_summary">Rice Summary</string>
+    <string name="pdf_rice_contribution">Total Rice Added</string>
+    <string name="pdf_rice_consumption">Total Rice Consumed</string>
+    <string name="pdf_rice_adjustments">Manual Adjustments</string>
+    <string name="pdf_rice_remaining">Current Remaining Stock</string>
+    <string name="pdf_study_summary">Study Summary</string>
+    <string name="pdf_subject_report">Subject-wise Study Breakdown</string>
+    <string name="pdf_generated_offline">Generated offline by MessMate</string>
+
+    <!-- Settings & About -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_profile">Personal Profile</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme_dark">Dark Mode</string>
+    <string name="settings_theme_light">Light Mode</string>
+    <string name="settings_theme_system">System Default</string>
+    <string name="settings_section_language">Language</string>
+    <string name="settings_lang_en">English</string>
+    <string name="settings_lang_bn">বাংলা</string>
+    <string name="settings_section_rice">Rice Consumption per Meal (kg)</string>
+    <string name="settings_rice_daily_total">Daily total (3 meals)</string>
+    <string name="settings_section_meals">Meal Reminders</string>
+    <string name="settings_section_study">Study &amp; Pomodoro Defaults</string>
+    <string name="settings_study_goal">Daily Study Goal (minutes)</string>
+    <string name="settings_pomodoro_focus">Focus Duration (min)</string>
+    <string name="settings_pomodoro_short">Short Break (min)</string>
+    <string name="settings_pomodoro_long">Long Break (min)</string>
+    <string name="settings_section_notifications">Reminders &amp; Notifications</string>
+    <string name="settings_meal_reminder">Daily Meal Reminder (12:00 PM BST)</string>
+    <string name="settings_meal_reminder_desc">Reminds you before the 1:00 PM meal change deadline.</string>
+    <string name="settings_study_reminders">Study Reminders</string>
+    <string name="settings_add_reminder">Add Reminder</string>
+    <string name="settings_edit_reminder">Edit Reminder</string>
+    <string name="settings_reminder_label_hint">Label (e.g. Evening Revision)</string>
+    <string name="settings_no_reminders">No study reminders configured.</string>
+    <string name="settings_disable_all_reminders">Disable All Study Reminders</string>
+    <string name="settings_profile_saved">Profile updated.</string>
+    <string name="settings_rice_saved">Rice consumption rates updated.</string>
+    <string name="settings_study_saved">Study preferences saved.</string>
+    <string name="settings_invalid_number">Please enter valid numbers.</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_meal_name">Meal Reminders</string>
+    <string name="notif_channel_meal_desc">Daily 12:00 PM BST reminder before the meal ON/OFF deadline.</string>
+    <string name="notif_channel_study_name">Study Reminders</string>
+    <string name="notif_channel_study_desc">Custom daily study reminders scheduled by you.</string>
+    <string name="notif_meal_title">Meal Update Reminder</string>
+    <string name="notif_meal_body">Update your Meal ON/OFF status before 1:00 PM BST for tonight\'s meal cycle.</string>
+    <string name="notif_study_title">Study Reminder</string>
+    <string name="notif_study_body_default">Time for your scheduled study session in MessMate.</string>
+
+    <!-- About MessMate -->
+    <string name="about_section_title">About MessMate</string>
+    <string name="about_version_label">Version</string>
+    <string name="about_developed_by">Developed by</string>
+    <string name="about_developer_name">Billal Hossain</string>
+    <string name="about_copyright">© 2026 Billal Hossain. All rights reserved.</string>
+    <string name="about_description">MessMate is a simple and smart offline companion for students living in messes. Manage your daily meals, rice consumption, study sessions, and personal records — all in one place.</string>
+    <string name="about_contact_whatsapp">Contact on WhatsApp</string>
+</resources>

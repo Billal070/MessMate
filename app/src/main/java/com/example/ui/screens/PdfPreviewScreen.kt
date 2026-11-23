@@ -6,8 +6,8 @@ import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,22 +15,18 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -47,17 +43,22 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.example.R
+import com.example.ui.components.EmptyStateBox
+import com.example.ui.components.StatusPill
+import com.example.ui.components.WarmTopBar
+import com.example.ui.components.warmMeshBackground
+import com.example.ui.theme.LocalMessMateColors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PdfPreviewScreen(
     filePath: String,
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val extraColors = LocalMessMateColors.current
     var renderedPages by remember { mutableStateOf<List<Bitmap>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     val pdfFile = remember(filePath) { File(filePath) }
@@ -98,92 +99,93 @@ fun PdfPreviewScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.records_pdf_preview_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                },
-                actions = {
-                    if (pdfFile.exists()) {
-                        IconButton(
-                            onClick = {
-                                runCatching {
-                                    val uri = FileProvider.getUriForFile(
-                                        context,
-                                        "${context.packageName}.fileprovider",
-                                        pdfFile
-                                    )
-                                    val intent = Intent(Intent.ACTION_SEND).apply {
-                                        type = "application/pdf"
-                                        putExtra(Intent.EXTRA_STREAM, uri)
-                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    }
-                                    context.startActivity(
-                                        Intent.createChooser(intent, context.getString(R.string.records_share_pdf))
-                                    )
-                                }.onFailure {
-                                    Toast.makeText(
-                                        context,
-                                        context.getString(R.string.records_pdf_error),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .warmMeshBackground()
+    ) {
+        WarmTopBar(
+            title = stringResource(R.string.records_pdf_preview_title),
+            onNavigateBack = onNavigateBack,
+            actions = {
+                if (pdfFile.exists()) {
+                    Surface(
+                        onClick = {
+                            runCatching {
+                                val uri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    pdfFile
+                                )
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "application/pdf"
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                 }
+                                context.startActivity(
+                                    Intent.createChooser(intent, context.getString(R.string.records_share_pdf))
+                                )
+                            }.onFailure {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.records_pdf_error),
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
-                        ) {
+                        },
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(1.dp, extraColors.divider),
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Share,
-                                contentDescription = stringResource(R.string.records_share_pdf)
+                                contentDescription = stringResource(R.string.records_share_pdf),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(innerPadding)
-        ) {
+                }
+            }
+        )
+
+        Box(modifier = Modifier.fillMaxSize()) {
             when {
                 isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-                renderedPages.isEmpty() -> {
-                    Text(
-                        text = stringResource(R.string.records_pdf_error),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.align(Alignment.Center)
                     )
+                }
+                renderedPages.isEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp)
+                            .align(Alignment.Center)
+                    ) {
+                        EmptyStateBox(message = stringResource(R.string.records_pdf_error))
+                    }
                 }
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         itemsIndexed(renderedPages) { index, bitmap ->
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text(
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                StatusPill(
                                     text = stringResource(R.string.records_page_indicator, index + 1, renderedPages.size),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.primary,
+                                    containerColor = extraColors.primarySoft
                                 )
                                 Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    shadowElevation = 2.dp,
+                                    shape = RoundedCornerShape(18.dp),
+                                    border = BorderStroke(1.dp, extraColors.divider),
+                                    shadowElevation = if (extraColors.isDark) 0.dp else 3.dp,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Image(

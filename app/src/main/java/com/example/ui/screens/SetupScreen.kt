@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -29,20 +28,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.AddAPhoto
 import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.outlined.School
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -57,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -69,7 +70,15 @@ import com.example.R
 import com.example.data.local.AppLanguage
 import com.example.data.local.PresetCatalog
 import com.example.ui.components.MessCard
+import com.example.ui.components.StatusPill
+import com.example.ui.components.WarmGradientButton
+import com.example.ui.components.WarmHeroCard
+import com.example.ui.components.WarmIconBadge
+import com.example.ui.components.WarmOutlinedButton
+import com.example.ui.components.flameGradientBrush
 import com.example.ui.components.localizedSemesterName
+import com.example.ui.components.warmMeshBackground
+import com.example.ui.components.warmTextFieldColors
 import com.example.ui.theme.LocalMessMateColors
 import com.example.ui.viewmodel.MessMateViewModel
 import kotlinx.coroutines.launch
@@ -163,11 +172,12 @@ fun SetupScreen(
         }
     }
 
+    val fieldColors = warmTextFieldColors()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .safeDrawingPadding()
+            .warmMeshBackground()
             .imePadding(),
         contentAlignment = Alignment.TopCenter
     ) {
@@ -176,17 +186,43 @@ fun SetupScreen(
                 .widthIn(max = 600.dp)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 20.dp),
+                .padding(horizontal = 18.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            // Warm Hero Welcome Card
+            WarmHeroCard {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(flameGradientBrush()),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.LocalFireDepartment,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    StatusPill(
+                        text = stringResource(R.string.home_offline_status),
+                        color = extraColors.success,
+                        containerColor = extraColors.successContainer
+                    )
+                }
+                Spacer(modifier = Modifier.height(14.dp))
                 Text(
                     text = stringResource(R.string.setup_title),
                     style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.SemiBold
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.ExtraBold
                 )
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = stringResource(R.string.setup_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
@@ -198,33 +234,74 @@ fun SetupScreen(
             MessCard {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Language,
-                        contentDescription = null,
+                    WarmIconBadge(
+                        icon = Icons.Outlined.Language,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
+                        containerColor = extraColors.primarySoft,
+                        borderColor = extraColors.primarySoftBorder,
+                        size = 38.dp,
+                        iconSize = 19.dp
                     )
                     Text(
                         text = stringResource(R.string.setup_language_label),
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                     FilterChip(
                         selected = currentLanguage == AppLanguage.EN,
                         onClick = { viewModel.setLanguage(AppLanguage.EN) },
-                        label = { Text(stringResource(R.string.settings_lang_en)) },
-                        modifier = Modifier.testTag("setup_lang_en")
+                        label = {
+                            Text(
+                                stringResource(R.string.settings_lang_en),
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = Color.White,
+                            containerColor = extraColors.surfaceElevated
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = currentLanguage == AppLanguage.EN,
+                            borderColor = extraColors.divider
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("setup_lang_en")
                     )
                     FilterChip(
                         selected = currentLanguage == AppLanguage.BN,
                         onClick = { viewModel.setLanguage(AppLanguage.BN) },
-                        label = { Text(stringResource(R.string.settings_lang_bn)) },
-                        modifier = Modifier.testTag("setup_lang_bn")
+                        label = {
+                            Text(
+                                stringResource(R.string.settings_lang_bn),
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = Color.White,
+                            containerColor = extraColors.surfaceElevated
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = currentLanguage == AppLanguage.BN,
+                            borderColor = extraColors.divider
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("setup_lang_bn")
                     )
                 }
             }
@@ -236,35 +313,40 @@ fun SetupScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Surface(
+                    Box(
                         modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
+                            .size(70.dp)
+                            .clip(RoundedCornerShape(22.dp))
+                            .background(flameGradientBrush())
+                            .padding(2.5.dp)
                             .clickable {
                                 photoPickerLauncher.launch(
                                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                 )
                             }
-                            .testTag("setup_photo_picker"),
-                        shape = CircleShape,
-                        color = extraColors.surfaceElevated,
-                        border = BorderStroke(1.dp, extraColors.divider)
+                            .testTag("setup_photo_picker")
                     ) {
-                        if (!photoPath.isNullOrBlank() && File(photoPath!!).exists()) {
-                            AsyncImage(
-                                model = File(photoPath!!),
-                                contentDescription = stringResource(R.string.setup_photo_label),
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        } else {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            shape = RoundedCornerShape(19.dp),
+                            color = extraColors.surfaceLow
+                        ) {
+                            if (!photoPath.isNullOrBlank() && File(photoPath!!).exists()) {
+                                AsyncImage(
+                                    model = File(photoPath!!),
                                     contentDescription = stringResource(R.string.setup_photo_label),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(30.dp)
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
                                 )
+                            } else {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = stringResource(R.string.setup_photo_label),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -280,30 +362,29 @@ fun SetupScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            WarmOutlinedButton(
+                                text = if (photoPath == null) stringResource(R.string.setup_photo_pick)
+                                else stringResource(R.string.setup_photo_change),
+                                icon = Icons.Outlined.AddAPhoto,
+                                contentColor = MaterialTheme.colorScheme.primary,
                                 onClick = {
                                     photoPickerLauncher.launch(
                                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                     )
-                                },
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.AddAPhoto,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = if (photoPath == null) stringResource(R.string.setup_photo_pick)
-                                    else stringResource(R.string.setup_photo_change)
-                                )
-                            }
+                                }
+                            )
                             if (photoPath != null) {
                                 TextButton(onClick = { photoPath = null }) {
-                                    Text(stringResource(R.string.setup_photo_remove))
+                                    Text(
+                                        stringResource(R.string.setup_photo_remove),
+                                        color = extraColors.danger,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
                         }
@@ -325,7 +406,8 @@ fun SetupScreen(
                         { Text(stringResource(R.string.setup_name_error)) }
                     } else null,
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("setup_name_input")
@@ -334,12 +416,25 @@ fun SetupScreen(
 
             // Optional Academic & Mess Details
             MessCard {
-                Text(
-                    text = stringResource(R.string.label_optional),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    WarmIconBadge(
+                        icon = Icons.Outlined.School,
+                        tint = extraColors.amber,
+                        containerColor = extraColors.amberContainer,
+                        borderColor = extraColors.amberBorder,
+                        size = 38.dp,
+                        iconSize = 19.dp
+                    )
+                    Text(
+                        text = stringResource(R.string.label_optional),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Spacer(modifier = Modifier.height(14.dp))
 
                 OutlinedTextField(
                     value = messName,
@@ -347,7 +442,8 @@ fun SetupScreen(
                     label = { Text(stringResource(R.string.setup_mess_label)) },
                     placeholder = { Text(stringResource(R.string.setup_mess_placeholder)) },
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("setup_mess_input")
@@ -361,7 +457,8 @@ fun SetupScreen(
                     label = { Text(stringResource(R.string.setup_institution_label)) },
                     placeholder = { Text(stringResource(R.string.setup_institution_placeholder)) },
                     singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("setup_institution_input")
@@ -384,14 +481,16 @@ fun SetupScreen(
                         readOnly = true,
                         label = { Text(stringResource(R.string.setup_department_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = deptDropdownExpanded) },
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = fieldColors,
                         modifier = Modifier
                             .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                             .fillMaxWidth()
                     )
                     ExposedDropdownMenu(
                         expanded = deptDropdownExpanded,
-                        onDismissRequest = { deptDropdownExpanded = false }
+                        onDismissRequest = { deptDropdownExpanded = false },
+                        containerColor = MaterialTheme.colorScheme.surface
                     ) {
                         (PresetCatalog.SUPPORTED_TECHNOLOGIES + PresetCatalog.OTHER_CUSTOM_TECH).forEach { tech ->
                             val label = if (tech == PresetCatalog.OTHER_CUSTOM_TECH) {
@@ -415,7 +514,8 @@ fun SetupScreen(
                         onValueChange = { customDepartment = it },
                         label = { Text(stringResource(R.string.setup_custom_department_label)) },
                         singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = fieldColors,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -433,14 +533,16 @@ fun SetupScreen(
                         readOnly = true,
                         label = { Text(stringResource(R.string.setup_semester_label)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = semesterDropdownExpanded) },
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = fieldColors,
                         modifier = Modifier
                             .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                             .fillMaxWidth()
                     )
                     ExposedDropdownMenu(
                         expanded = semesterDropdownExpanded,
-                        onDismissRequest = { semesterDropdownExpanded = false }
+                        onDismissRequest = { semesterDropdownExpanded = false },
+                        containerColor = MaterialTheme.colorScheme.surface
                     ) {
                         PresetCatalog.SEMESTERS.forEach { sem ->
                             DropdownMenuItem(
@@ -460,12 +562,13 @@ fun SetupScreen(
                 MessCard {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Icon(
-                            imageVector = if (notificationGranted) Icons.Default.CheckCircle else Icons.Default.Notifications,
-                            contentDescription = null,
-                            tint = if (notificationGranted) extraColors.success else MaterialTheme.colorScheme.primary
+                        WarmIconBadge(
+                            icon = if (notificationGranted) Icons.Default.CheckCircle else Icons.Default.Notifications,
+                            tint = if (notificationGranted) extraColors.success else MaterialTheme.colorScheme.primary,
+                            containerColor = if (notificationGranted) extraColors.successContainer else extraColors.primarySoft,
+                            borderColor = if (notificationGranted) extraColors.success.copy(alpha = 0.25f) else extraColors.primarySoftBorder
                         )
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
@@ -480,25 +583,25 @@ fun SetupScreen(
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     if (notificationGranted) {
-                        Text(
+                        StatusPill(
                             text = stringResource(R.string.setup_permission_granted),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = extraColors.success
+                            color = extraColors.success,
+                            containerColor = extraColors.successContainer,
+                            icon = Icons.Default.CheckCircle
                         )
                     } else {
-                        OutlinedButton(
+                        WarmOutlinedButton(
+                            text = stringResource(R.string.setup_permission_grant),
+                            contentColor = MaterialTheme.colorScheme.primary,
                             onClick = {
                                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             },
-                            shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.testTag("setup_request_notif_permission")
-                        ) {
-                            Text(stringResource(R.string.setup_permission_grant))
-                        }
+                        )
                         if (notificationDenied) {
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = stringResource(R.string.setup_permission_denied_note),
                                 style = MaterialTheme.typography.bodySmall,
@@ -511,20 +614,14 @@ fun SetupScreen(
 
             // Actions
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick = { submitSetup(skipOptional = false) },
+                WarmGradientButton(
+                    text = stringResource(R.string.action_finish_setup),
                     enabled = !isSaving,
-                    shape = RoundedCornerShape(12.dp),
+                    onClick = { submitSetup(skipOptional = false) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
                         .testTag("setup_finish_button")
-                ) {
-                    Text(
-                        text = stringResource(R.string.action_finish_setup),
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
+                )
 
                 TextButton(
                     onClick = { submitSetup(skipOptional = true) },
@@ -533,7 +630,11 @@ fun SetupScreen(
                         .fillMaxWidth()
                         .testTag("setup_skip_optional_button")
                 ) {
-                    Text(stringResource(R.string.action_skip_optional))
+                    Text(
+                        stringResource(R.string.action_skip_optional),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
