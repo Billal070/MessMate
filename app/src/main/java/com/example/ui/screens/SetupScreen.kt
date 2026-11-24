@@ -70,6 +70,7 @@ import com.example.R
 import com.example.data.local.AppLanguage
 import com.example.data.local.PresetCatalog
 import com.example.ui.components.MessCard
+import com.example.ui.components.MessMateLogo
 import com.example.ui.components.StatusPill
 import com.example.ui.components.WarmGradientButton
 import com.example.ui.components.WarmHeroCard
@@ -195,20 +196,10 @@ fun SetupScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(flameGradientBrush()),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.LocalFireDepartment,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+                    MessMateLogo(
+                        size = 48.dp,
+                        modifier = Modifier.testTag("setup_brand_logo")
+                    )
                     StatusPill(
                         text = stringResource(R.string.home_offline_status),
                         color = extraColors.success,

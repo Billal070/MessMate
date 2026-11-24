@@ -84,6 +84,7 @@ import com.example.data.local.PresetCatalog
 import com.example.data.local.StudyReminderEntity
 import com.example.data.local.ThemeMode
 import com.example.ui.components.MessCard
+import com.example.ui.components.MessMateLogo
 import com.example.ui.components.SectionHeader
 import com.example.ui.components.StatusPill
 import com.example.ui.components.WarmActionPill
@@ -103,7 +104,13 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Locale
 
-private const val WHATSAPP_DEVELOPER_LINK = "https://wa.me/qr/ELG6FBSIGT4BA1"
+internal const val WHATSAPP_DEVELOPER_PHONE = "01944890493"
+internal const val WHATSAPP_DEVELOPER_LINK = "https://wa.me/8801944890493"
+
+internal fun buildWhatsAppContactIntent(url: String = WHATSAPP_DEVELOPER_LINK): Intent =
+    Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+        addCategory(Intent.CATEGORY_BROWSABLE)
+    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -827,20 +834,10 @@ fun SettingsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(flameGradientBrush()),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Restaurant,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
+                            MessMateLogo(
+                                size = 48.dp,
+                                modifier = Modifier.testTag("about_brand_logo")
+                            )
                             Text(
                                 text = stringResource(R.string.app_name),
                                 style = MaterialTheme.typography.titleLarge,
@@ -895,7 +892,7 @@ fun SettingsScreen(
                         gradient = Brush.horizontalGradient(listOf(extraColors.greenStart, extraColors.greenEnd)),
                         onClick = {
                             runCatching {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(WHATSAPP_DEVELOPER_LINK))
+                                val intent = buildWhatsAppContactIntent(WHATSAPP_DEVELOPER_LINK)
                                 context.startActivity(intent)
                             }.onFailure {
                                 Toast.makeText(context, WHATSAPP_DEVELOPER_LINK, Toast.LENGTH_LONG).show()

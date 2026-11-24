@@ -20,7 +20,8 @@ data class UserPreferences(
     val themeMode: ThemeMode = ThemeMode.LIGHT,
     val language: AppLanguage = AppLanguage.EN,
     val setupCompleted: Boolean = false,
-    val notificationPermissionPrompted: Boolean = false
+    val notificationPermissionPrompted: Boolean = false,
+    val trackingStartDateIso: String? = null
 )
 
 class PreferencesStore(private val context: Context) {
@@ -30,6 +31,7 @@ class PreferencesStore(private val context: Context) {
         val LANGUAGE = stringPreferencesKey("language")
         val SETUP_COMPLETED = booleanPreferencesKey("setup_completed")
         val NOTIFICATION_PROMPTED = booleanPreferencesKey("notification_prompted")
+        val TRACKING_START_DATE_ISO = stringPreferencesKey("tracking_start_date_iso")
     }
 
     val preferencesFlow: Flow<UserPreferences> = context.messMateDataStore.data.map { prefs ->
@@ -37,11 +39,14 @@ class PreferencesStore(private val context: Context) {
             themeMode = ThemeMode.fromName(prefs[Keys.THEME_MODE]),
             language = AppLanguage.fromCode(prefs[Keys.LANGUAGE]),
             setupCompleted = prefs[Keys.SETUP_COMPLETED] ?: false,
-            notificationPermissionPrompted = prefs[Keys.NOTIFICATION_PROMPTED] ?: false
+            notificationPermissionPrompted = prefs[Keys.NOTIFICATION_PROMPTED] ?: false,
+            trackingStartDateIso = prefs[Keys.TRACKING_START_DATE_ISO]
         )
     }
 
     suspend fun getPreferencesOnce(): UserPreferences = preferencesFlow.first()
+
+    suspend fun getTrackingStartDateIsoOnce(): String? = preferencesFlow.first().trackingStartDateIso
 
     suspend fun setThemeMode(themeMode: ThemeMode) {
         context.messMateDataStore.edit { prefs ->
@@ -62,9 +67,19 @@ class PreferencesStore(private val context: Context) {
         }
     }
 
+    suspend fun setTrackingStartDateIso(dateIso: String) {
+        context.messMateDataStore.edit { prefs ->
+            prefs[Keys.TRACKING_START_DATE_ISO] = dateIso
+        }
+    }
+
     suspend fun setNotificationPermissionPrompted(prompted: Boolean) {
         context.messMateDataStore.edit { prefs ->
             prefs[Keys.NOTIFICATION_PROMPTED] = prompted
         }
+    }
+
+    internal suspend fun clearForTesting() {
+        context.messMateDataStore.edit { it.clear() }
     }
 }

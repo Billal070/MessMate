@@ -73,6 +73,7 @@ import com.example.data.repository.MealRiceRepository
 import com.example.ui.components.CircularFlameProgressRing
 import com.example.ui.components.EmptyStateBox
 import com.example.ui.components.MessCard
+import com.example.ui.components.MessMateLogo
 import com.example.ui.components.SectionHeader
 import com.example.ui.components.StatusPill
 import com.example.ui.components.WarmActionPill
@@ -148,20 +149,10 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(RoundedCornerShape(11.dp))
-                            .background(flameGradientBrush()),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Restaurant,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    MessMateLogo(
+                        size = 38.dp,
+                        modifier = Modifier.testTag("home_brand_logo")
+                    )
                     Text(
                         text = stringResource(R.string.app_name),
                         style = MaterialTheme.typography.headlineSmall,

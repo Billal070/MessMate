@@ -25,7 +25,7 @@ class AppContainer(
 ) {
     val preferencesStore = PreferencesStore(context)
     val csvSubjectImporter = CsvSubjectImporter(context, database.subjectDao())
-    val mealRiceRepository = MealRiceRepository(database, timeProvider)
+    val mealRiceRepository = MealRiceRepository(database, timeProvider, preferencesStore)
     val studyRepository = StudyRepository(database, timeProvider)
     val profileSettingsRepository = ProfileSettingsRepository(context, database, preferencesStore, timeProvider)
     val reminderScheduler = ReminderScheduler(context, timeProvider)

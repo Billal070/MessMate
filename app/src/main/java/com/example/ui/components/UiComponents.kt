@@ -2,6 +2,7 @@ package com.example.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -51,7 +52,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,6 +65,20 @@ import com.example.data.local.MealStatus
 import com.example.data.local.MealType
 import com.example.data.local.RiceTransactionType
 import com.example.ui.theme.LocalMessMateColors
+
+@Composable
+fun MessMateLogo(
+    size: Dp,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = stringResource(R.string.app_name)
+) {
+    Image(
+        painter = painterResource(id = R.drawable.ic_messmate_logo),
+        contentDescription = contentDescription,
+        contentScale = ContentScale.Fit,
+        modifier = modifier.size(size)
+    )
+}
 
 @Composable
 fun Modifier.warmMeshBackground(): Modifier {

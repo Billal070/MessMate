@@ -8,6 +8,7 @@ import com.example.data.local.MealRecordEntity
 import com.example.data.local.MealStatus
 import com.example.data.local.MealType
 import com.example.data.local.MessMateDatabase
+import com.example.data.local.PreferencesStore
 import com.example.data.local.RiceTransactionEntity
 import com.example.data.local.RiceTransactionType
 import com.example.util.TimeProvider
@@ -48,7 +49,8 @@ data class MonthlyRiceSummary(
 
 class MealRiceRepository(
     private val database: MessMateDatabase,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    private val preferencesStore: PreferencesStore? = null
 ) {
     private val mealCycleDao = database.mealCycleDao()
     private val mealRecordDao = database.mealRecordDao()
@@ -150,11 +152,12 @@ class MealRiceRepository(
                 }
             }
 
+            val trackingStartDate = resolveTrackingStartDateInternal(today)
             // Re-reconcile cycles affected by this change (effectiveDate and onward).
-            reconcileCycleAndMealsInternal(effectiveCycle, now, updatedSettings)
+            reconcileCycleAndMealsInternal(effectiveCycle, now, updatedSettings, trackingStartDate)
             val refreshedFuture = mealCycleDao.getCyclesFrom(effectiveDate.plusDays(1).toString())
             for (cycle in refreshedFuture) {
-                reconcileCycleAndMealsInternal(cycle, now, updatedSettings)
+                reconcileCycleAndMealsInternal(cycle, now, updatedSettings, trackingStartDate)
             }
 
             // Ensure tomorrow's cycle exists too if effectiveDate == today
@@ -167,7 +170,7 @@ class MealRiceRepository(
                     updatedAtEpochMs = nowMs
                 )
                 mealCycleDao.upsert(nextCycle)
-                reconcileCycleAndMealsInternal(nextCycle, now, updatedSettings)
+                reconcileCycleAndMealsInternal(nextCycle, now, updatedSettings, trackingStartDate)
             }
         }
 
@@ -235,6 +238,7 @@ class MealRiceRepository(
         val nowMs = now.toInstant().toEpochMilli()
         database.withTransaction {
             val settings = ensureAppSettingsInternal()
+            val trackingStartDate = resolveTrackingStartDateInternal(now.toLocalDate())
             val cycle = MealCycleEntity(
                 id = cycleId(cycleStartDate),
                 startDateIso = cycleStartDate.toString(),
@@ -242,20 +246,28 @@ class MealRiceRepository(
                 updatedAtEpochMs = nowMs
             )
             mealCycleDao.upsert(cycle)
-            reconcileCycleAndMealsInternal(cycle, now, settings)
+            reconcileCycleAndMealsInternal(cycle, now, settings, trackingStartDate)
         }
     }
 
     suspend fun ensureDateRecordsExist(date: LocalDate) {
         val now = timeProvider.now()
+        val today = now.toLocalDate()
+        // Never fabricate future activity records
+        if (date.isAfter(today)) return
+
         val nowMs = now.toInstant().toEpochMilli()
         database.withTransaction {
             val settings = ensureAppSettingsInternal()
+            val trackingStartDate = resolveTrackingStartDateInternal(today)
+            // Never fabricate historical activity before the user's tracking start date
+            if (trackingStartDate == null || date.isBefore(trackingStartDate)) return@withTransaction
+
             val prevCycleDate = date.minusDays(1)
             val prevCycle = getOrCreateCycleInternal(prevCycleDate, settings.mealGlobalOn, nowMs)
             val currentCycle = getOrCreateCycleInternal(date, settings.mealGlobalOn, nowMs)
-            reconcileCycleAndMealsInternal(prevCycle, now, settings)
-            reconcileCycleAndMealsInternal(currentCycle, now, settings)
+            reconcileCycleAndMealsInternal(prevCycle, now, settings, trackingStartDate)
+            reconcileCycleAndMealsInternal(currentCycle, now, settings, trackingStartDate)
         }
     }
 
@@ -362,19 +374,59 @@ class MealRiceRepository(
         return defaultSettings
     }
 
+    private suspend fun resolveTrackingStartDateInternal(today: LocalDate): LocalDate? {
+        val storedPrefs = preferencesStore?.getPreferencesOnce()
+        val storedStart = storedPrefs?.trackingStartDateIso
+            ?.takeIf { it.isNotBlank() }
+            ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        if (storedStart != null) return storedStart
+
+        val profile = profileDao.getProfileOnce()
+        val profileCreatedDate = profile?.createdDateIso
+            ?.takeIf { it.isNotBlank() }
+            ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        val earliestMealDate = mealRecordDao.getEarliestMealDateIso()
+            ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        val earliestRiceDate = riceTransactionDao.getEarliestTransactionDateIso()
+            ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        val earliestCycleDate = mealCycleDao.getEarliestCycle()?.startDateIso
+            ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+
+        val existingDates = listOfNotNull(profileCreatedDate, earliestMealDate, earliestRiceDate, earliestCycleDate)
+        val hasExistingUser = (storedPrefs?.setupCompleted == true) ||
+            (profile?.setupCompleted == true) ||
+            existingDates.isNotEmpty()
+
+        // On a fresh install before setup completion (when PreferencesStore is wired), do not fabricate any data.
+        if (preferencesStore != null && !hasExistingUser) {
+            return null
+        }
+
+        // Preserve full history for existing upgrading users; default to today when DB is brand new.
+        val resolved = existingDates.minOrNull() ?: today
+        if (preferencesStore != null && hasExistingUser) {
+            preferencesStore.setTrackingStartDateIso(resolved.toString())
+        }
+        return resolved
+    }
+
     private suspend fun reconcileInternal(now: ZonedDateTime, settings: AppSettingsEntity) {
         val today = now.toLocalDate()
         val nowMs = now.toInstant().toEpochMilli()
 
+        val trackingStartDate = resolveTrackingStartDateInternal(today) ?: return
+
         val earliestCycle = mealCycleDao.getEarliestCycle()
-        val profileCreatedDate = profileDao.getProfileOnce()?.createdDateIso
-            ?.takeIf { it.isNotBlank() }
+            ?.startDateIso
             ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
 
-        val anchorStart = when {
-            earliestCycle != null -> LocalDate.parse(earliestCycle.startDateIso)
-            profileCreatedDate != null -> profileCreatedDate.minusDays(1)
-            else -> today.minusDays(1)
+        // Start from trackingStartDate.minusDays(1) so trackingStartDate's Breakfast & Lunch cycle exists,
+        // while reconcileCycleAndMealsInternal strictly skips any meal dated before trackingStartDate.
+        val startCycleAnchor = trackingStartDate.minusDays(1)
+        val anchorStart = if (earliestCycle != null && earliestCycle.isBefore(startCycleAnchor)) {
+            earliestCycle
+        } else {
+            startCycleAnchor
         }
 
         // Prevent huge unbounded loops if device clock jumped years ahead unexpectedly; cap at 400 days back
@@ -398,7 +450,7 @@ class MealRiceRepository(
                 mealCycleDao.upsert(created)
                 created
             }
-            reconcileCycleAndMealsInternal(cycle, now, settings)
+            reconcileCycleAndMealsInternal(cycle, now, settings, trackingStartDate)
             cursor = cursor.plusDays(1)
         }
 
@@ -428,7 +480,8 @@ class MealRiceRepository(
     private suspend fun reconcileCycleAndMealsInternal(
         cycle: MealCycleEntity,
         now: ZonedDateTime,
-        settings: AppSettingsEntity
+        settings: AppSettingsEntity,
+        trackingStartDate: LocalDate? = null
     ) {
         val startDate = LocalDate.parse(cycle.startDateIso)
         val nextDate = startDate.plusDays(1)
@@ -441,6 +494,10 @@ class MealRiceRepository(
         )
 
         for ((mealDate, mealType) in cycleMeals) {
+            if (trackingStartDate != null && mealDate.isBefore(trackingStartDate)) {
+                continue
+            }
+
             val recordId = mealId(mealDate, mealType)
             val scheduledTime = timeProvider.atBangladeshDateTime(mealDate, mealType.scheduledTime)
             val existing = mealRecordDao.getById(recordId)

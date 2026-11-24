@@ -46,7 +46,12 @@ class ProfileSettingsRepository(
         if (trimmedName.isEmpty()) {
             return Result.failure(IllegalArgumentException("Name cannot be empty"))
         }
-        val todayIso = timeProvider.today().toString()
+        val existing = profileDao.getProfileOnce()
+        val existingStart = preferencesStore.getTrackingStartDateIsoOnce()
+            ?.takeIf { it.isNotBlank() }
+            ?: existing?.createdDateIso?.takeIf { it.isNotBlank() }
+        val trackingStartIso = existingStart ?: timeProvider.today().toString()
+
         profileDao.upsert(
             ProfileEntity(
                 id = 1,
@@ -57,9 +62,10 @@ class ProfileSettingsRepository(
                 department = department.trim(),
                 semester = semester.trim(),
                 setupCompleted = true,
-                createdDateIso = todayIso
+                createdDateIso = trackingStartIso
             )
         )
+        preferencesStore.setTrackingStartDateIso(trackingStartIso)
         preferencesStore.setSetupCompleted(true)
         return Result.success(Unit)
     }

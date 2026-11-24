@@ -131,9 +131,14 @@ class CalendarRecordsViewModel(private val container: AppContainer) : ViewModel(
         val riceByDate = rices.groupBy { it.dateIso }
         val studyByDate = studies.groupBy { it.dateIso }
 
+        val today = timeProvider.today()
         val map = mutableMapOf<LocalDate, CalendarDayMarkers>()
         for (day in 1..month.lengthOfMonth()) {
             val date = month.atDay(day)
+            if (date.isAfter(today)) {
+                map[date] = CalendarDayMarkers(date = date)
+                continue
+            }
             val iso = date.toString()
             val dayMeals = mealsByDate[iso].orEmpty()
             val dayRices = riceByDate[iso].orEmpty()
@@ -158,22 +163,31 @@ class CalendarRecordsViewModel(private val container: AppContainer) : ViewModel(
     private val _pdfState = MutableStateFlow(PdfGenerationState())
     val pdfState: StateFlow<PdfGenerationState> = _pdfState.asStateFlow()
 
+    fun canNavigateNextMonth(month: YearMonth = _selectedMonth.value): Boolean =
+        month.isBefore(timeProvider.currentYearMonth())
+
     fun previousMonth() {
         _selectedMonth.value = _selectedMonth.value.minusMonths(1)
         _pdfState.value = PdfGenerationState()
     }
 
     fun nextMonth() {
-        _selectedMonth.value = _selectedMonth.value.plusMonths(1)
-        _pdfState.value = PdfGenerationState()
+        val currentMonth = timeProvider.currentYearMonth()
+        val candidate = _selectedMonth.value.plusMonths(1)
+        if (!candidate.isAfter(currentMonth)) {
+            _selectedMonth.value = candidate
+            _pdfState.value = PdfGenerationState()
+        }
     }
 
     fun selectMonth(yearMonth: YearMonth) {
-        _selectedMonth.value = yearMonth
+        val currentMonth = timeProvider.currentYearMonth()
+        _selectedMonth.value = if (yearMonth.isAfter(currentMonth)) currentMonth else yearMonth
         _pdfState.value = PdfGenerationState()
     }
 
     fun ensureDateLoaded(date: LocalDate) {
+        if (date.isAfter(timeProvider.today())) return
         viewModelScope.launch {
             mealRiceRepo.ensureDateRecordsExist(date)
         }

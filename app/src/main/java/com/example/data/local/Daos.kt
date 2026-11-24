@@ -104,6 +104,9 @@ interface MealRecordDao {
     @Query("SELECT * FROM meal_records WHERE dateIso = :dateIso AND mealType = :mealType")
     suspend fun getByDateAndType(dateIso: String, mealType: MealType): MealRecordEntity?
 
+    @Query("SELECT MIN(dateIso) FROM meal_records")
+    suspend fun getEarliestMealDateIso(): String?
+
     @Upsert
     suspend fun upsert(record: MealRecordEntity)
 }
@@ -156,6 +159,9 @@ interface RiceTransactionDao {
 
     @Query("SELECT * FROM rice_transactions WHERE id = :id")
     suspend fun getById(id: Long): RiceTransactionEntity?
+
+    @Query("SELECT MIN(dateIso) FROM rice_transactions")
+    suspend fun getEarliestTransactionDateIso(): String?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(tx: RiceTransactionEntity): Long

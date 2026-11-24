@@ -90,6 +90,7 @@ fun CombinedCalendarScreen(
     val markersMap by calendarViewModel.calendarMarkers.collectAsStateWithLifecycle()
     val extraColors = LocalMessMateColors.current
     val today = calendarViewModel.timeProvider.today()
+    val canGoNextMonth = calendarViewModel.canNavigateNextMonth(selectedMonth)
 
     val daysOfWeek = listOf(
         DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY,
@@ -150,10 +151,14 @@ fun CombinedCalendarScreen(
                         )
 
                         Surface(
-                            onClick = { calendarViewModel.nextMonth() },
+                            onClick = { if (canGoNextMonth) calendarViewModel.nextMonth() },
+                            enabled = canGoNextMonth,
                             shape = CircleShape,
-                            color = extraColors.surfaceLow,
-                            border = BorderStroke(1.dp, extraColors.divider),
+                            color = if (canGoNextMonth) extraColors.surfaceLow else extraColors.surfaceLow.copy(alpha = 0.45f),
+                            border = BorderStroke(
+                                1.dp,
+                                if (canGoNextMonth) extraColors.divider else extraColors.divider.copy(alpha = 0.45f)
+                            ),
                             modifier = Modifier
                                 .size(40.dp)
                                 .testTag("calendar_next_month")
@@ -162,7 +167,11 @@ fun CombinedCalendarScreen(
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                     contentDescription = "Next month",
-                                    tint = MaterialTheme.colorScheme.onSurface
+                                    tint = if (canGoNextMonth) {
+                                        MaterialTheme.colorScheme.onSurface
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+                                    }
                                 )
                             }
                         }
@@ -199,12 +208,14 @@ fun CombinedCalendarScreen(
                                     val dayNumber = cellIndex - leadingBlanks + 1
                                     if (dayNumber in 1..totalDays) {
                                         val date = selectedMonth.atDay(dayNumber)
+                                        val isFutureDate = date.isAfter(today)
                                         val markers = markersMap[date] ?: CalendarDayMarkers(date)
                                         CalendarDayCell(
                                             dayNumber = dayNumber,
                                             isToday = date == today,
+                                            isFuture = isFutureDate,
                                             markers = markers,
-                                            onClick = { onSelectDate(date) },
+                                            onClick = { if (!isFutureDate) onSelectDate(date) },
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .testTag("calendar_day_${date}")
@@ -250,6 +261,7 @@ fun CombinedCalendarScreen(
 private fun CalendarDayCell(
     dayNumber: Int,
     isToday: Boolean,
+    isFuture: Boolean,
     markers: CalendarDayMarkers,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -259,12 +271,14 @@ private fun CalendarDayCell(
 
     val borderColor = when {
         isToday -> MaterialTheme.colorScheme.primary
+        isFuture -> extraColors.divider.copy(alpha = 0.45f)
         markers.isMealOffDay -> extraColors.danger.copy(alpha = 0.45f)
         else -> extraColors.divider
     }
 
     val bgColor = when {
         isToday -> extraColors.primarySoft
+        isFuture -> extraColors.surfaceLow.copy(alpha = 0.45f)
         markers.isMealOffDay -> extraColors.dangerContainer
         else -> extraColors.surfaceLow
     }
@@ -273,7 +287,7 @@ private fun CalendarDayCell(
         modifier = modifier
             .aspectRatio(0.90f)
             .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick),
+            .then(if (!isFuture) Modifier.clickable(onClick = onClick) else Modifier),
         shape = RoundedCornerShape(12.dp),
         color = bgColor,
         border = BorderStroke(if (isToday) 1.6.dp else 1.dp, borderColor)
@@ -288,11 +302,15 @@ private fun CalendarDayCell(
             Text(
                 text = dayNumber.toString(),
                 style = MaterialTheme.typography.labelMedium,
-                color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                color = when {
+                    isToday -> MaterialTheme.colorScheme.primary
+                    isFuture -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    else -> MaterialTheme.colorScheme.onSurface
+                },
                 fontWeight = if (isToday) FontWeight.ExtraBold else FontWeight.Bold
             )
 
-            if (markers.isMealOffDay) {
+            if (!isFuture && markers.isMealOffDay) {
                 Text(
                     text = "OFF",
                     fontSize = 8.sp,
@@ -302,22 +320,26 @@ private fun CalendarDayCell(
                 )
             }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(3.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (markers.hasMealActivity) {
-                    MarkerDot(extraColors.mealBlue)
+            if (!isFuture) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (markers.hasMealActivity) {
+                        MarkerDot(extraColors.mealBlue)
+                    }
+                    if (markers.hasStudyActivity) {
+                        MarkerDot(extraColors.studyGreen)
+                    }
+                    if (markers.hasRiceActivity) {
+                        MarkerDot(extraColors.riceOrange)
+                    }
+                    if (!hasAnyActivity && !markers.isMealOffDay) {
+                        MarkerDot(extraColors.neutralGrey.copy(alpha = 0.45f))
+                    }
                 }
-                if (markers.hasStudyActivity) {
-                    MarkerDot(extraColors.studyGreen)
-                }
-                if (markers.hasRiceActivity) {
-                    MarkerDot(extraColors.riceOrange)
-                }
-                if (!hasAnyActivity && !markers.isMealOffDay) {
-                    MarkerDot(extraColors.neutralGrey.copy(alpha = 0.45f))
-                }
+            } else {
+                Spacer(modifier = Modifier.height(5.dp))
             }
         }
     }

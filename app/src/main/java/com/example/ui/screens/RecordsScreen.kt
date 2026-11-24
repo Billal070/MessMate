@@ -106,6 +106,7 @@ fun RecordsScreen(
     val monthStudyStats by calendarViewModel.monthStudyStats.collectAsStateWithLifecycle()
     val pdfState by calendarViewModel.pdfState.collectAsStateWithLifecycle()
     val extraColors = LocalMessMateColors.current
+    val canGoNextMonth = calendarViewModel.canNavigateNextMonth(selectedMonth)
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf(
@@ -199,10 +200,14 @@ fun RecordsScreen(
                     fontWeight = FontWeight.ExtraBold
                 )
                 Surface(
-                    onClick = { calendarViewModel.nextMonth() },
+                    onClick = { if (canGoNextMonth) calendarViewModel.nextMonth() },
+                    enabled = canGoNextMonth,
                     shape = CircleShape,
-                    color = extraColors.surfaceLow,
-                    border = BorderStroke(1.dp, extraColors.divider),
+                    color = if (canGoNextMonth) extraColors.surfaceLow else extraColors.surfaceLow.copy(alpha = 0.45f),
+                    border = BorderStroke(
+                        1.dp,
+                        if (canGoNextMonth) extraColors.divider else extraColors.divider.copy(alpha = 0.45f)
+                    ),
                     modifier = Modifier
                         .size(38.dp)
                         .testTag("records_next_month")
@@ -211,7 +216,11 @@ fun RecordsScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.KeyboardArrowRight,
                             contentDescription = "Next month",
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = if (canGoNextMonth) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f)
+                            }
                         )
                     }
                 }
