@@ -8,7 +8,10 @@ import com.example.data.local.StudySessionType
 import com.example.data.local.StudySettingsEntity
 import com.example.data.local.SubjectEntity
 import com.example.util.TimeProvider
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -61,9 +64,10 @@ class StudyRepository(
         studySessionDao.observeRecent(limit)
 
     fun observeStatistics(selectedMonth: YearMonth): Flow<StudyStatistics> {
-        return allSessions.map { sessions ->
-            computeStatistics(sessions, timeProvider.today(), selectedMonth)
-        }
+        return allSessions
+            .map { sessions -> computeStatistics(sessions, timeProvider.today(), selectedMonth) }
+            .flowOn(Dispatchers.Default)
+            .distinctUntilChanged()
     }
 
     suspend fun getMonthlyStudySummary(yearMonth: YearMonth): StudyStatistics {
@@ -78,35 +82,52 @@ class StudyRepository(
     ): StudyStatistics {
         val todayIso = today.toString()
         val weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SATURDAY))
-        val weekEnd = weekStart.plusDays(6)
-        val monthStart = selectedMonth.atDay(1)
-        val monthEnd = selectedMonth.atEndOfMonth()
+        val weekStartIso = weekStart.toString()
+        val weekEndIso = weekStart.plusDays(6).toString()
+        val monthStartIso = selectedMonth.atDay(1).toString()
+        val monthEndIso = selectedMonth.atEndOfMonth().toString()
 
-        val todaySeconds = sessions.filter { it.dateIso == todayIso }.sumOf { it.durationSeconds }
-        val weeklySeconds = sessions.filter { s ->
-            val d = runCatching { LocalDate.parse(s.dateIso) }.getOrNull()
-            d != null && !d.isBefore(weekStart) && !d.isAfter(weekEnd)
-        }.sumOf { it.durationSeconds }
+        var todaySeconds = 0L
+        var weeklySeconds = 0L
+        var monthlySeconds = 0L
+        val subjectAgg = LinkedHashMap<Pair<String, String>, Pair<Long, Int>>()
+        val activeDateIsos = HashSet<String>()
 
-        val monthSessions = sessions.filter { s ->
-            val d = runCatching { LocalDate.parse(s.dateIso) }.getOrNull()
-            d != null && !d.isBefore(monthStart) && !d.isAfter(monthEnd)
+        // Single pass with O(1) lexicographical yyyy-MM-dd comparison — avoids repeated LocalDate.parse()
+        for (s in sessions) {
+            val iso = s.dateIso
+            val dur = s.durationSeconds
+            if (iso.length == 10) {
+                if (iso == todayIso) {
+                    todaySeconds += dur
+                }
+                if (iso >= weekStartIso && iso <= weekEndIso) {
+                    weeklySeconds += dur
+                }
+                if (iso >= monthStartIso && iso <= monthEndIso) {
+                    monthlySeconds += dur
+                    val key = s.subjectName to s.subjectCode
+                    val prev = subjectAgg[key]
+                    subjectAgg[key] = if (prev == null) dur to 1 else (prev.first + dur) to (prev.second + 1)
+                }
+                if (dur > 0L) {
+                    activeDateIsos.add(iso)
+                }
+            }
         }
-        val monthlySeconds = monthSessions.sumOf { it.durationSeconds }
 
-        val breakdown = monthSessions
-            .groupBy { it.subjectName to it.subjectCode }
-            .map { (key, list) ->
+        val breakdown = subjectAgg.entries
+            .map { (key, agg) ->
                 SubjectStudySummary(
                     subjectName = key.first,
                     subjectCode = key.second,
-                    totalSeconds = list.sumOf { it.durationSeconds },
-                    sessionCount = list.size
+                    totalSeconds = agg.first,
+                    sessionCount = agg.second
                 )
             }
             .sortedByDescending { it.totalSeconds }
 
-        val streak = calculateStudyStreak(sessions, today)
+        val streak = calculateStudyStreakFromIsoSet(activeDateIsos, today)
 
         return StudyStatistics(
             todaySeconds = todaySeconds,
@@ -118,19 +139,14 @@ class StudyRepository(
         )
     }
 
-    private fun calculateStudyStreak(sessions: List<StudySessionEntity>, today: LocalDate): Int {
-        val activeDates = sessions
-            .filter { it.durationSeconds > 0L }
-            .mapNotNull { runCatching { LocalDate.parse(it.dateIso) }.getOrNull() }
-            .toSet()
+    private fun calculateStudyStreakFromIsoSet(activeDateIsos: Set<String>, today: LocalDate): Int {
+        if (activeDateIsos.isEmpty()) return 0
 
-        if (activeDates.isEmpty()) return 0
-
-        var cursor = if (today in activeDates) today else today.minusDays(1)
-        if (cursor !in activeDates) return 0
+        var cursor = if (today.toString() in activeDateIsos) today else today.minusDays(1)
+        if (cursor.toString() !in activeDateIsos) return 0
 
         var streak = 0
-        while (cursor in activeDates) {
+        while (cursor.toString() in activeDateIsos) {
             streak++
             cursor = cursor.minusDays(1)
         }

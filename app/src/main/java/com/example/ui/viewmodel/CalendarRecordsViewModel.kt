@@ -16,6 +16,7 @@ import com.example.data.repository.MonthlyMealSummary
 import com.example.data.repository.MonthlyRiceSummary
 import com.example.data.repository.StudyStatistics
 import com.example.pdf.MonthlyReportData
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,9 +24,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.LocalDate
 import java.time.YearMonth
@@ -61,7 +65,7 @@ class CalendarRecordsViewModel(private val container: AppContainer) : ViewModel(
     private val mealRiceRepo = container.mealRiceRepository
     private val studyRepo = container.studyRepository
     private val profileRepo = container.profileSettingsRepository
-    private val pdfGenerator = container.pdfGenerator
+    private val pdfGenerator get() = container.pdfGenerator
     val timeProvider = container.timeProvider
 
     private val _selectedMonth = MutableStateFlow(timeProvider.currentYearMonth())
@@ -95,11 +99,14 @@ class CalendarRecordsViewModel(private val container: AppContainer) : ViewModel(
             lunchCounted = records.count { it.mealType.name == "LUNCH" && it.status == MealStatus.COUNTED },
             dinnerCounted = records.count { it.mealType.name == "DINNER" && it.status == MealStatus.COUNTED }
         )
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        MonthlyMealSummary(0, 0, 0, 0, 0, 0, 0)
-    )
+    }
+        .flowOn(Dispatchers.Default)
+        .distinctUntilChanged()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            MonthlyMealSummary(0, 0, 0, 0, 0, 0, 0)
+        )
 
     val monthRiceSummary: StateFlow<MonthlyRiceSummary> = combine(
         monthRiceTransactions,
@@ -111,11 +118,14 @@ class CalendarRecordsViewModel(private val container: AppContainer) : ViewModel(
             totalAdjustmentsKg = txs.filter { it.type == RiceTransactionType.MANUAL_ADJUSTMENT }.sumOf { it.quantityKg },
             remainingStockKg = currentStock
         )
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        MonthlyRiceSummary(0.0, 0.0, 0.0, 0.0)
-    )
+    }
+        .flowOn(Dispatchers.Default)
+        .distinctUntilChanged()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            MonthlyRiceSummary(0.0, 0.0, 0.0, 0.0)
+        )
 
     val monthStudyStats: StateFlow<StudyStatistics> = _selectedMonth
         .flatMapLatest { studyRepo.observeStatistics(it) }
@@ -158,7 +168,10 @@ class CalendarRecordsViewModel(private val container: AppContainer) : ViewModel(
             )
         }
         map
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    }
+        .flowOn(Dispatchers.Default)
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     private val _pdfState = MutableStateFlow(PdfGenerationState())
     val pdfState: StateFlow<PdfGenerationState> = _pdfState.asStateFlow()
@@ -188,7 +201,7 @@ class CalendarRecordsViewModel(private val container: AppContainer) : ViewModel(
 
     fun ensureDateLoaded(date: LocalDate) {
         if (date.isAfter(timeProvider.today())) return
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             mealRiceRepo.ensureDateRecordsExist(date)
         }
     }
@@ -210,6 +223,8 @@ class CalendarRecordsViewModel(private val container: AppContainer) : ViewModel(
                 studySessions = studies
             )
         }
+            .flowOn(Dispatchers.Default)
+            .distinctUntilChanged()
     }
 
     fun generateMonthlyPdf(localizedContext: Context, locale: Locale, onReady: (File) -> Unit = {}) {
@@ -217,19 +232,22 @@ class CalendarRecordsViewModel(private val container: AppContainer) : ViewModel(
         viewModelScope.launch {
             _pdfState.value = PdfGenerationState(isGenerating = true)
             try {
-                val profile = profileRepo.getProfileOnce() ?: ProfileEntity(name = "Student")
-                val mealSummary = mealRiceRepo.getMonthlyMealSummary(month)
-                val riceSummary = mealRiceRepo.getMonthlyRiceSummary(month)
-                val studyStats = studyRepo.getMonthlyStudySummary(month)
-                val file = pdfGenerator.generateMonthlyReport(
-                    localizedContext = localizedContext,
-                    report = MonthlyReportData(
+                val reportData = withContext(Dispatchers.IO) {
+                    val profile = profileRepo.getProfileOnce() ?: ProfileEntity(name = "Student")
+                    val mealSummary = mealRiceRepo.getMonthlyMealSummary(month)
+                    val riceSummary = mealRiceRepo.getMonthlyRiceSummary(month)
+                    val studyStats = studyRepo.getMonthlyStudySummary(month)
+                    MonthlyReportData(
                         yearMonth = month,
                         profile = profile,
                         mealSummary = mealSummary,
                         riceSummary = riceSummary,
                         studyStats = studyStats
-                    ),
+                    )
+                }
+                val file = pdfGenerator.generateMonthlyReport(
+                    localizedContext = localizedContext,
+                    report = reportData,
                     locale = locale
                 )
                 _pdfState.value = PdfGenerationState(

@@ -56,7 +56,7 @@ class StudyTimerViewModel(private val container: AppContainer) : ViewModel() {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val studySettings: StateFlow<StudySettingsEntity> = studyRepo.studySettings
-        .stateIn(viewModelScope, SharingStarted.Eagerly, StudySettingsEntity())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), StudySettingsEntity())
 
     val currentMonthStats: StateFlow<StudyStatistics> = studyRepo
         .observeStatistics(timeProvider.currentYearMonth())
@@ -71,17 +71,17 @@ class StudyTimerViewModel(private val container: AppContainer) : ViewModel() {
     private var pomodoroJob: Job? = null
     private var stopwatchJob: Job? = null
 
-    init {
-        viewModelScope.launch {
-            studySettings.collect { settings ->
-                _pomodoro.update { state ->
-                    if (!state.isRunning && !state.hasStarted) {
-                        val secs = durationSecondsForMode(state.mode, settings)
-                        state.copy(totalSeconds = secs, remainingSeconds = secs)
-                    } else {
-                        state
-                    }
+    fun syncPomodoroSettingsIfIdle(settings: StudySettingsEntity) {
+        _pomodoro.update { state ->
+            if (!state.isRunning && !state.hasStarted) {
+                val secs = durationSecondsForMode(state.mode, settings)
+                if (state.totalSeconds == secs && state.remainingSeconds == secs) {
+                    state
+                } else {
+                    state.copy(totalSeconds = secs, remainingSeconds = secs)
                 }
+            } else {
+                state
             }
         }
     }

@@ -1,9 +1,22 @@
 package com.example.ui.navigation
 
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -38,6 +51,7 @@ import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -64,7 +78,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.R
 import com.example.data.local.AppLanguage
+import com.example.ui.components.LocalReducedMotion
+import com.example.ui.components.MotionSpec
 import com.example.ui.components.flameGradientBrush
+import com.example.ui.components.pressScaleFeedback
 import com.example.ui.screens.AddRiceScreen
 import com.example.ui.screens.CombinedCalendarScreen
 import com.example.ui.screens.DateDetailScreen
@@ -115,6 +132,13 @@ private val MAIN_TABS = listOf(
     MainNavTab(Routes.RECORDS, R.string.nav_records, Icons.Filled.BarChart, Icons.Outlined.BarChart)
 )
 
+private val TAB_ORDER = mapOf(
+    Routes.HOME to 0,
+    Routes.MEALS to 1,
+    Routes.STUDY to 2,
+    Routes.RECORDS to 3
+)
+
 @Composable
 fun MessMateAppRoot(
     setupCompleted: Boolean,
@@ -126,13 +150,14 @@ fun MessMateAppRoot(
     val navController = rememberNavController()
     val locale = remember(currentLanguage) { Locale.forLanguageTag(currentLanguage.code) }
     val startDestination = remember { if (setupCompleted) Routes.HOME else Routes.SETUP }
-    val extraColors = LocalMessMateColors.current
+    val reducedMotion = LocalReducedMotion.current
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val showMainNav = currentRoute in setOf(Routes.HOME, Routes.MEALS, Routes.STUDY, Routes.RECORDS)
+    val showMainNav = currentRoute in TAB_ORDER
 
     fun switchMainTab(route: String) {
+        if (currentRoute == route) return
         navController.navigate(route) {
             popUpTo(navController.graph.findStartDestination().id) {
                 saveState = true
@@ -203,7 +228,18 @@ fun MessMateAppRoot(
                 containerColor = MaterialTheme.colorScheme.background,
                 contentWindowInsets = WindowInsets.safeDrawing,
                 bottomBar = {
-                    if (showMainNav) {
+                    val barDuration = MotionSpec.duration(180, reducedMotion)
+                    AnimatedVisibility(
+                        visible = showMainNav,
+                        enter = if (reducedMotion) EnterTransition.None else {
+                            fadeIn(tween(barDuration, easing = FastOutSlowInEasing)) +
+                                slideInVertically(tween(barDuration, easing = FastOutSlowInEasing)) { it / 2 }
+                        },
+                        exit = if (reducedMotion) ExitTransition.None else {
+                            fadeOut(tween(MotionSpec.duration(140, reducedMotion), easing = FastOutSlowInEasing)) +
+                                slideOutVertically(tween(MotionSpec.duration(140, reducedMotion), easing = FastOutSlowInEasing)) { it / 2 }
+                        }
+                    ) {
                         WarmFloatingBottomBar(
                             currentDestinationCheck = { route ->
                                 navBackStackEntry?.destination?.hierarchy?.any { it.route == route } == true
@@ -235,6 +271,8 @@ private fun WarmFloatingBottomBar(
     onSelectTab: (String) -> Unit
 ) {
     val extra = LocalMessMateColors.current
+    val reducedMotion = LocalReducedMotion.current
+    val activeBrush = flameGradientBrush()
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -267,9 +305,16 @@ private fun WarmFloatingBottomBar(
                 MAIN_TABS.forEach { tab ->
                     val selected = currentDestinationCheck(tab.route)
                     val label = stringResource(tab.labelRes)
+                    val interactionSource = remember { MutableInteractionSource() }
+                    val contentTint by animateColorAsState(
+                        targetValue = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                        animationSpec = MotionSpec.fastTween(reducedMotion),
+                        label = "bottom_nav_tint_${tab.route}"
+                    )
                     Box(
                         modifier = Modifier
                             .weight(1f)
+                            .pressScaleFeedback(interactionSource = interactionSource, pressedScale = 0.95f)
                             .height(52.dp)
                             .padding(horizontal = 2.dp)
                             .then(
@@ -282,12 +327,16 @@ private fun WarmFloatingBottomBar(
                                             spotColor = extra.flameStart.copy(alpha = 0.42f)
                                         )
                                         .clip(RoundedCornerShape(26.dp))
-                                        .background(flameGradientBrush())
+                                        .background(activeBrush)
                                 } else {
                                     Modifier.clip(RoundedCornerShape(26.dp))
                                 }
                             )
-                            .clickable { onSelectTab(tab.route) }
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication = ripple(color = if (selected) Color.White else MaterialTheme.colorScheme.primary),
+                                onClick = { onSelectTab(tab.route) }
+                            )
                             .testTag("nav_tab_${tab.route}"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -298,7 +347,7 @@ private fun WarmFloatingBottomBar(
                             Icon(
                                 imageVector = if (selected) tab.selectedIcon else tab.unselectedIcon,
                                 contentDescription = label,
-                                tint = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint = contentTint,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.height(2.dp))
@@ -307,7 +356,7 @@ private fun WarmFloatingBottomBar(
                                 fontSize = 10.sp,
                                 lineHeight = 12.sp,
                                 fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Bold,
-                                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = contentTint,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -331,10 +380,79 @@ private fun MessMateNavHost(
     onSwitchTab: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val reducedMotion = LocalReducedMotion.current
+    val tabDuration = MotionSpec.duration(190, reducedMotion)
+    val pushDuration = MotionSpec.duration(220, reducedMotion)
+    val popDuration = MotionSpec.duration(180, reducedMotion)
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
-        modifier = modifier
+        modifier = modifier,
+        enterTransition = {
+            if (reducedMotion) {
+                EnterTransition.None
+            } else {
+                val fromTab = TAB_ORDER[initialState.destination.route]
+                val toTab = TAB_ORDER[targetState.destination.route]
+                if (fromTab != null && toTab != null) {
+                    val dir = if (toTab >= fromTab) 1 else -1
+                    fadeIn(tween(tabDuration, easing = FastOutSlowInEasing)) +
+                        slideInHorizontally(tween(tabDuration, easing = FastOutSlowInEasing)) { dir * (it / 16) }
+                } else {
+                    fadeIn(tween(pushDuration, easing = FastOutSlowInEasing)) +
+                        slideInHorizontally(tween(pushDuration, easing = FastOutSlowInEasing)) { it / 6 }
+                }
+            }
+        },
+        exitTransition = {
+            if (reducedMotion) {
+                ExitTransition.None
+            } else {
+                val fromTab = TAB_ORDER[initialState.destination.route]
+                val toTab = TAB_ORDER[targetState.destination.route]
+                if (fromTab != null && toTab != null) {
+                    val dir = if (toTab >= fromTab) -1 else 1
+                    fadeOut(tween(MotionSpec.duration(140, reducedMotion), easing = FastOutSlowInEasing)) +
+                        slideOutHorizontally(tween(tabDuration, easing = FastOutSlowInEasing)) { dir * (it / 16) }
+                } else {
+                    fadeOut(tween(MotionSpec.duration(150, reducedMotion), easing = FastOutSlowInEasing)) +
+                        slideOutHorizontally(tween(pushDuration, easing = FastOutSlowInEasing)) { -it / 12 }
+                }
+            }
+        },
+        popEnterTransition = {
+            if (reducedMotion) {
+                EnterTransition.None
+            } else {
+                val fromTab = TAB_ORDER[initialState.destination.route]
+                val toTab = TAB_ORDER[targetState.destination.route]
+                if (fromTab != null && toTab != null) {
+                    val dir = if (toTab >= fromTab) 1 else -1
+                    fadeIn(tween(tabDuration, easing = FastOutSlowInEasing)) +
+                        slideInHorizontally(tween(tabDuration, easing = FastOutSlowInEasing)) { dir * (it / 16) }
+                } else {
+                    fadeIn(tween(popDuration, easing = FastOutSlowInEasing)) +
+                        slideInHorizontally(tween(popDuration, easing = FastOutSlowInEasing)) { -it / 12 }
+                }
+            }
+        },
+        popExitTransition = {
+            if (reducedMotion) {
+                ExitTransition.None
+            } else {
+                val fromTab = TAB_ORDER[initialState.destination.route]
+                val toTab = TAB_ORDER[targetState.destination.route]
+                if (fromTab != null && toTab != null) {
+                    val dir = if (toTab >= fromTab) -1 else 1
+                    fadeOut(tween(MotionSpec.duration(140, reducedMotion), easing = FastOutSlowInEasing)) +
+                        slideOutHorizontally(tween(tabDuration, easing = FastOutSlowInEasing)) { dir * (it / 16) }
+                } else {
+                    fadeOut(tween(MotionSpec.duration(150, reducedMotion), easing = FastOutSlowInEasing)) +
+                        slideOutHorizontally(tween(popDuration, easing = FastOutSlowInEasing)) { it / 6 }
+                }
+            }
+        }
     ) {
         composable(Routes.SETUP) {
             SetupScreen(

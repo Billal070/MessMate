@@ -20,11 +20,15 @@ import com.example.data.local.ThemeMode
 import com.example.data.local.UserPreferences
 import com.example.data.repository.DeadlineDecision
 import com.example.data.repository.MealToggleResult
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -46,8 +50,9 @@ class MessMateViewModel(private val container: AppContainer) : ViewModel() {
     val preferencesState: StateFlow<UserPreferences?> = profileRepo.preferences
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val preferences: StateFlow<UserPreferences> = profileRepo.preferences
-        .stateIn(viewModelScope, SharingStarted.Eagerly, UserPreferences())
+    val preferences: StateFlow<UserPreferences> = preferencesState
+        .map { it ?: UserPreferences() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UserPreferences())
 
     val profile: StateFlow<ProfileEntity?> = profileRepo.profile
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -79,6 +84,12 @@ class MessMateViewModel(private val container: AppContainer) : ViewModel() {
     val todayStudySeconds: StateFlow<Long> = studyRepo.observeTodayStudySeconds(timeProvider.today())
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0L)
 
+    // Lightweight 1-row query for HomeScreen "Last focus" card — avoids loading the entire study_sessions table on startup
+    val latestStudySession: StateFlow<StudySessionEntity?> = studyRepo.observeRecentSessions(1)
+        .map { it.firstOrNull() }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     val recentActivity: StateFlow<List<RecentActivityItem>> = combine(
         mealRiceRepo.observeRecentRice(6),
         studyRepo.observeRecentSessions(6),
@@ -90,7 +101,10 @@ class MessMateViewModel(private val container: AppContainer) : ViewModel() {
         mealList.filter { it.status == MealStatus.COUNTED || it.status == MealStatus.SKIPPED }
             .forEach { items.add(RecentActivityItem.Meal(it)) }
         items.sortedByDescending { it.timestampEpochMs }.take(6)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }
+        .flowOn(Dispatchers.Default)
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _lastMealToggleResult = MutableStateFlow<MealToggleResult?>(null)
     val lastMealToggleResult: StateFlow<MealToggleResult?> = _lastMealToggleResult.asStateFlow()
@@ -100,7 +114,7 @@ class MessMateViewModel(private val container: AppContainer) : ViewModel() {
     }
 
     fun reconcileNow() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             mealRiceRepo.ensureDefaultsAndReconcile()
         }
     }

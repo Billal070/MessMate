@@ -1,5 +1,10 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -48,6 +53,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,10 +76,13 @@ import com.example.data.local.MealStatus
 import com.example.data.local.MealType
 import com.example.data.local.RiceTransactionType
 import com.example.data.repository.MealRiceRepository
+import com.example.ui.components.AnimatedMetricText
 import com.example.ui.components.CircularFlameProgressRing
 import com.example.ui.components.EmptyStateBox
+import com.example.ui.components.LocalReducedMotion
 import com.example.ui.components.MessCard
 import com.example.ui.components.MessMateLogo
+import com.example.ui.components.MotionSpec
 import com.example.ui.components.SectionHeader
 import com.example.ui.components.StatusPill
 import com.example.ui.components.WarmActionPill
@@ -119,17 +128,21 @@ fun HomeScreen(
     val todayStudySeconds by viewModel.todayStudySeconds.collectAsStateWithLifecycle()
     val recentActivity by viewModel.recentActivity.collectAsStateWithLifecycle()
     val studyStats by studyViewModel.currentMonthStats.collectAsStateWithLifecycle()
-    val recentSessions by studyViewModel.studySessions.collectAsStateWithLifecycle()
+    val latestSession by viewModel.latestStudySession.collectAsStateWithLifecycle()
 
     val extraColors = LocalMessMateColors.current
+    val reducedMotion = LocalReducedMotion.current
     val today = viewModel.todayDate
-    val isCycleOff = todayMeals.isNotEmpty() && todayMeals.all { it.status == MealStatus.OFF }
-    val countedMealsCount = todayMeals.count { it.status == MealStatus.COUNTED }
-    val goalSeconds = (studySettings.dailyGoalMinutes.coerceAtLeast(1) * 60L)
-    val studyProgress = (todayStudySeconds.toFloat() / goalSeconds.toFloat()).coerceIn(0f, 1f)
+    val isCycleOff = remember(todayMeals) { todayMeals.isNotEmpty() && todayMeals.all { it.status == MealStatus.OFF } }
+    val countedMealsCount = remember(todayMeals) { todayMeals.count { it.status == MealStatus.COUNTED } }
+    val goalSeconds = remember(studySettings) { studySettings.dailyGoalMinutes.coerceAtLeast(1) * 60L }
+    val studyProgress = remember(todayStudySeconds, goalSeconds) {
+        (todayStudySeconds.toFloat() / goalSeconds.toFloat()).coerceIn(0f, 1f)
+    }
     val studyPercent = (studyProgress * 100).toInt()
-    val dailyRiceRate = appSettings.breakfastRiceKg + appSettings.lunchRiceKg + appSettings.dinnerRiceKg
-    val latestSession = recentSessions.firstOrNull()
+    val dailyRiceRate = remember(appSettings) {
+        appSettings.breakfastRiceKg + appSettings.lunchRiceKg + appSettings.dinnerRiceKg
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -543,19 +556,27 @@ fun HomeScreen(
                     }
                 )
 
-                if (isLowRice) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    WarmAlertBanner(
-                        icon = Icons.Default.Warning,
-                        title = if (isNegativeRice) {
-                            stringResource(R.string.home_rice_negative_warning)
-                        } else {
-                            stringResource(R.string.home_rice_low_warning)
-                        },
-                        accentColor = if (isNegativeRice) extraColors.danger else MaterialTheme.colorScheme.primary,
-                        containerColor = if (isNegativeRice) extraColors.dangerContainer else extraColors.primarySoft,
-                        borderColor = if (isNegativeRice) extraColors.danger.copy(alpha = 0.35f) else extraColors.primarySoftBorder
-                    )
+                AnimatedVisibility(
+                    visible = isLowRice,
+                    enter = fadeIn(MotionSpec.standardTween(reducedMotion)) +
+                        expandVertically(MotionSpec.standardTween(reducedMotion)),
+                    exit = fadeOut(MotionSpec.fastTween(reducedMotion)) +
+                        shrinkVertically(MotionSpec.fastTween(reducedMotion))
+                ) {
+                    Column {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        WarmAlertBanner(
+                            icon = Icons.Default.Warning,
+                            title = if (isNegativeRice) {
+                                stringResource(R.string.home_rice_negative_warning)
+                            } else {
+                                stringResource(R.string.home_rice_low_warning)
+                            },
+                            accentColor = if (isNegativeRice) extraColors.danger else MaterialTheme.colorScheme.primary,
+                            containerColor = if (isNegativeRice) extraColors.dangerContainer else extraColors.primarySoft,
+                            borderColor = if (isNegativeRice) extraColors.danger.copy(alpha = 0.35f) else extraColors.primarySoftBorder
+                        )
+                    }
                 }
             }
         }
@@ -632,7 +653,7 @@ fun HomeScreen(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(
+                        AnimatedMetricText(
                             text = Formatters.formatDurationHoursMinutes(todayStudySeconds),
                             style = MaterialTheme.typography.displaySmall,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -664,7 +685,7 @@ fun HomeScreen(
                     )
                 }
 
-                if (latestSession != null) {
+                latestSession?.let { lastFocus ->
                     Spacer(modifier = Modifier.height(12.dp))
                     Surface(
                         shape = RoundedCornerShape(14.dp),
@@ -686,8 +707,8 @@ fun HomeScreen(
                             Text(
                                 text = stringResource(
                                     R.string.home_last_focus,
-                                    latestSession.subjectName,
-                                    Formatters.formatDurationSeconds(latestSession.durationSeconds)
+                                    lastFocus.subjectName,
+                                    Formatters.formatDurationSeconds(lastFocus.durationSeconds)
                                 ),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface,

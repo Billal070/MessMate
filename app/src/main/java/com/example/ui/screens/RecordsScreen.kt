@@ -1,9 +1,21 @@
 package com.example.ui.screens
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +37,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -60,15 +73,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.data.local.MealStatus
 import com.example.data.local.RiceTransactionEntity
+import com.example.pdf.PdfFileActions
+import com.example.pdf.PdfStructureValidator
 import com.example.ui.components.CompactStatCard
 import com.example.ui.components.ConfirmDeleteDialog
 import com.example.ui.components.EmptyStateBox
+import com.example.ui.components.LocalReducedMotion
 import com.example.ui.components.MessCard
+import com.example.ui.components.MotionSpec
 import com.example.ui.components.StatusPill
 import com.example.ui.components.WarmActionPill
 import com.example.ui.components.WarmGradientButton
@@ -239,30 +255,49 @@ fun RecordsScreen(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        when (selectedTab) {
-            0 -> RiceHistoryTab(
-                messViewModel = messViewModel,
-                transactions = monthRiceTxs,
-                summary = monthRiceSummary,
-                onOpenAddRice = onOpenAddRice
-            )
-            1 -> MealStatsTab(
-                meals = monthMeals,
-                summary = monthMealSummary,
-                locale = locale,
-                onOpenDateDetail = onOpenDateDetail
-            )
-            2 -> StudyStatsTab(stats = monthStudyStats)
-            3 -> MonthlyReportsTab(
-                calendarViewModel = calendarViewModel,
-                selectedMonth = selectedMonth,
-                mealSummary = monthMealSummary,
-                riceSummary = monthRiceSummary,
-                studyStats = monthStudyStats,
-                pdfState = pdfState,
-                locale = locale,
-                onPreviewPdf = onPreviewPdf
-            )
+        val reducedMotion = LocalReducedMotion.current
+        AnimatedContent(
+            targetState = selectedTab,
+            modifier = Modifier.weight(1f),
+            transitionSpec = {
+                val dur = MotionSpec.duration(180, reducedMotion)
+                val dir = if (targetState >= initialState) 1 else -1
+                if (reducedMotion) {
+                    fadeIn(tween(0)) togetherWith fadeOut(tween(0))
+                } else {
+                    (fadeIn(tween(dur, easing = FastOutSlowInEasing)) +
+                        slideInHorizontally(tween(dur, easing = FastOutSlowInEasing)) { dir * (it / 16) }) togetherWith
+                        (fadeOut(tween(MotionSpec.duration(120, reducedMotion), easing = FastOutSlowInEasing)) +
+                            slideOutHorizontally(tween(dur, easing = FastOutSlowInEasing)) { -dir * (it / 16) })
+                }
+            },
+            label = "records_tab_transition"
+        ) { tab ->
+            when (tab) {
+                0 -> RiceHistoryTab(
+                    messViewModel = messViewModel,
+                    transactions = monthRiceTxs,
+                    summary = monthRiceSummary,
+                    onOpenAddRice = onOpenAddRice
+                )
+                1 -> MealStatsTab(
+                    meals = monthMeals,
+                    summary = monthMealSummary,
+                    locale = locale,
+                    onOpenDateDetail = onOpenDateDetail
+                )
+                2 -> StudyStatsTab(stats = monthStudyStats)
+                3 -> MonthlyReportsTab(
+                    calendarViewModel = calendarViewModel,
+                    selectedMonth = selectedMonth,
+                    mealSummary = monthMealSummary,
+                    riceSummary = monthRiceSummary,
+                    studyStats = monthStudyStats,
+                    pdfState = pdfState,
+                    locale = locale,
+                    onPreviewPdf = onPreviewPdf
+                )
+            }
         }
     }
 }
@@ -640,44 +675,49 @@ private fun MonthlyReportsTab(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val extraColors = LocalMessMateColors.current
+    val reducedMotion = LocalReducedMotion.current
 
     val pdfSavedToast = stringResource(R.string.records_pdf_saved)
     val pdfErrorToast = stringResource(R.string.records_pdf_error)
+    val noPdfViewerToast = stringResource(R.string.records_no_pdf_viewer)
+
+    // Hold the exact generated file across SAF picker round-trip so state changes never lose it
+    var pendingSaveFile by remember { mutableStateOf<File?>(null) }
 
     val saveDocumentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/pdf")
+        contract = ActivityResultContracts.CreateDocument(PdfFileActions.PDF_MIME_TYPE)
     ) { uri ->
-        val sourceFile = pdfState.generatedFile
-        if (uri != null && sourceFile != null && sourceFile.exists()) {
+        val sourceFile = pendingSaveFile ?: pdfState.generatedFile
+        pendingSaveFile = null
+        if (uri != null && sourceFile != null) {
             scope.launch {
-                val ok = withContext(Dispatchers.IO) {
-                    runCatching {
-                        context.contentResolver.openOutputStream(uri)?.use { out ->
-                            sourceFile.inputStream().use { input -> input.copyTo(out) }
-                        }
-                    }.isSuccess
-                }
+                val result = PdfFileActions.copyPdfToUri(
+                    context = context,
+                    sourceFile = sourceFile,
+                    destinationUri = uri
+                )
                 Toast.makeText(
                     context,
-                    if (ok) pdfSavedToast else pdfErrorToast,
+                    if (result.isSuccess) pdfSavedToast else pdfErrorToast,
                     Toast.LENGTH_SHORT
                 ).show()
             }
         }
     }
 
+    fun openPdfExternally(file: File) {
+        runCatching {
+            val intent = PdfFileActions.buildOpenPdfIntent(context, file)
+            context.startActivity(intent)
+        }.onFailure { error ->
+            val msg = if (error is ActivityNotFoundException) noPdfViewerToast else pdfErrorToast
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     fun sharePdfFile(file: File) {
         runCatching {
-            val uri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                file
-            )
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "application/pdf"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
+            val intent = PdfFileActions.buildSharePdfIntent(context, file)
             context.startActivity(Intent.createChooser(intent, context.getString(R.string.records_share_pdf)))
         }.onFailure {
             Toast.makeText(context, pdfErrorToast, Toast.LENGTH_SHORT).show()
@@ -726,79 +766,116 @@ private fun MonthlyReportsTab(
 
         item {
             MessCard {
-                if (pdfState.isGenerating) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(26.dp),
-                            strokeWidth = 3.dp,
-                            color = MaterialTheme.colorScheme.primary
+                AnimatedContent(
+                    targetState = pdfState.isGenerating,
+                    transitionSpec = {
+                        val dur = MotionSpec.duration(160, reducedMotion)
+                        fadeIn(tween(dur, easing = FastOutSlowInEasing)) togetherWith
+                            fadeOut(tween(MotionSpec.duration(110, reducedMotion), easing = FastOutSlowInEasing))
+                    },
+                    label = "pdf_generate_button_state"
+                ) { generating ->
+                    if (generating) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(26.dp),
+                                strokeWidth = 3.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    } else {
+                        WarmGradientButton(
+                            text = stringResource(R.string.records_generate_pdf),
+                            icon = Icons.Default.PictureAsPdf,
+                            onClick = {
+                                calendarViewModel.generateMonthlyPdf(
+                                    localizedContext = context,
+                                    locale = locale
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("generate_pdf_button")
                         )
                     }
-                } else {
-                    WarmGradientButton(
-                        text = stringResource(R.string.records_generate_pdf),
-                        icon = Icons.Default.PictureAsPdf,
-                        onClick = {
-                            calendarViewModel.generateMonthlyPdf(
-                                localizedContext = context,
-                                locale = locale
-                            )
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("generate_pdf_button")
-                    )
                 }
 
                 val readyFile = pdfState.generatedFile?.takeIf {
-                    it.exists() && pdfState.generatedForMonth == selectedMonth
+                    pdfState.generatedForMonth == selectedMonth && PdfStructureValidator.validate(it).isValid
                 }
 
-                if (readyFile != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    StatusPill(
-                        text = stringResource(R.string.records_pdf_ready, readyFile.name),
-                        color = extraColors.success,
-                        containerColor = extraColors.successContainer,
-                        icon = Icons.Default.CheckCircle
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        WarmOutlinedButton(
-                            text = stringResource(R.string.records_preview_pdf),
-                            icon = Icons.Default.Visibility,
-                            contentColor = MaterialTheme.colorScheme.primary,
-                            onClick = { onPreviewPdf(readyFile.absolutePath) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .testTag("preview_pdf_button")
-                        )
-                        WarmOutlinedButton(
-                            text = stringResource(R.string.records_save_pdf),
-                            icon = Icons.Default.Download,
-                            onClick = { saveDocumentLauncher.launch(readyFile.name) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .testTag("save_pdf_button")
-                        )
+                AnimatedVisibility(
+                    visible = readyFile != null,
+                    enter = fadeIn(MotionSpec.standardTween(reducedMotion)) +
+                        expandVertically(MotionSpec.standardTween(reducedMotion)),
+                    exit = fadeOut(MotionSpec.fastTween(reducedMotion)) +
+                        shrinkVertically(MotionSpec.fastTween(reducedMotion))
+                ) {
+                    if (readyFile != null) {
+                        Column {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            StatusPill(
+                                text = stringResource(R.string.records_pdf_ready, readyFile.name),
+                                color = extraColors.success,
+                                containerColor = extraColors.successContainer,
+                                icon = Icons.Default.CheckCircle
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                WarmOutlinedButton(
+                                    text = stringResource(R.string.records_preview_pdf),
+                                    icon = Icons.Default.Visibility,
+                                    contentColor = MaterialTheme.colorScheme.primary,
+                                    onClick = { onPreviewPdf(readyFile.absolutePath) },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("preview_pdf_button")
+                                )
+                                WarmOutlinedButton(
+                                    text = stringResource(R.string.records_open_pdf),
+                                    icon = Icons.AutoMirrored.Filled.OpenInNew,
+                                    contentColor = MaterialTheme.colorScheme.primary,
+                                    onClick = { openPdfExternally(readyFile) },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("open_pdf_button")
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                WarmOutlinedButton(
+                                    text = stringResource(R.string.records_save_pdf),
+                                    icon = Icons.Default.Download,
+                                    onClick = {
+                                        pendingSaveFile = readyFile
+                                        saveDocumentLauncher.launch(PdfFileActions.ensurePdfExtension(readyFile.name))
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("save_pdf_button")
+                                )
+                                WarmOutlinedButton(
+                                    text = stringResource(R.string.records_share_pdf),
+                                    icon = Icons.Default.Share,
+                                    onClick = { sharePdfFile(readyFile) },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("share_pdf_button")
+                                )
+                            }
+                        }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    WarmOutlinedButton(
-                        text = stringResource(R.string.records_share_pdf),
-                        icon = Icons.Default.Share,
-                        onClick = { sharePdfFile(readyFile) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("share_pdf_button")
-                    )
                 }
 
                 pdfState.error?.let {

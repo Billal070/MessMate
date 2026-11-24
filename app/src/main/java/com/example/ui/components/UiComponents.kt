@@ -1,5 +1,13 @@
 package com.example.ui.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -7,6 +15,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,11 +48,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -86,44 +98,54 @@ fun Modifier.warmMeshBackground(): Modifier {
     val extra = LocalMessMateColors.current
     val glowAlphaTop = if (extra.isDark) 0.14f else 0.12f
     val glowAlphaSide = if (extra.isDark) 0.10f else 0.14f
+    val topGlowColor = extra.flameStart.copy(alpha = glowAlphaTop)
+    val sideGlowColor = extra.flameMid.copy(alpha = glowAlphaSide)
+
+    // drawWithCache caches radial gradient shaders across draw frames for zero per-frame allocations
     return this
         .background(bg)
-        .drawBehind {
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(extra.flameStart.copy(alpha = glowAlphaTop), Color.Transparent),
-                    center = Offset(size.width * 0.12f, size.height * 0.08f),
-                    radius = size.width * 0.72f
-                ),
-                radius = size.width * 0.72f,
-                center = Offset(size.width * 0.12f, size.height * 0.08f)
+        .drawWithCache {
+            val topCenter = Offset(size.width * 0.12f, size.height * 0.08f)
+            val topRadius = (size.width * 0.72f).coerceAtLeast(1f)
+            val topBrush = Brush.radialGradient(
+                colors = listOf(topGlowColor, Color.Transparent),
+                center = topCenter,
+                radius = topRadius
             )
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(extra.flameMid.copy(alpha = glowAlphaSide), Color.Transparent),
-                    center = Offset(size.width * 0.92f, size.height * 0.05f),
-                    radius = size.width * 0.65f
-                ),
-                radius = size.width * 0.65f,
-                center = Offset(size.width * 0.92f, size.height * 0.05f)
+
+            val sideCenter = Offset(size.width * 0.92f, size.height * 0.05f)
+            val sideRadius = (size.width * 0.65f).coerceAtLeast(1f)
+            val sideBrush = Brush.radialGradient(
+                colors = listOf(sideGlowColor, Color.Transparent),
+                center = sideCenter,
+                radius = sideRadius
             )
+
+            onDrawBehind {
+                drawCircle(brush = topBrush, radius = topRadius, center = topCenter)
+                drawCircle(brush = sideBrush, radius = sideRadius, center = sideCenter)
+            }
         }
 }
 
 @Composable
 fun flameGradientBrush(): Brush {
     val extra = LocalMessMateColors.current
-    return Brush.linearGradient(
-        colors = listOf(extra.flameStart, extra.flameMid, extra.flameEnd)
-    )
+    return remember(extra) {
+        Brush.linearGradient(
+            colors = listOf(extra.flameStart, extra.flameMid, extra.flameEnd)
+        )
+    }
 }
 
 @Composable
 fun flamePillBrush(): Brush {
     val extra = LocalMessMateColors.current
-    return Brush.horizontalGradient(
-        colors = listOf(extra.flameStart, extra.flameMid)
-    )
+    return remember(extra) {
+        Brush.horizontalGradient(
+            colors = listOf(extra.flameStart, extra.flameMid)
+        )
+    }
 }
 
 @Composable
@@ -148,25 +170,29 @@ fun MessCard(
     cornerRadius: Dp = 22.dp,
     contentPadding: PaddingValues = PaddingValues(18.dp),
     shadowElevation: Dp = 2.dp,
+    animateSize: Boolean = true,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val extra = LocalMessMateColors.current
+    val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .shadow(
                 elevation = if (extra.isDark) 0.dp else shadowElevation,
-                shape = RoundedCornerShape(cornerRadius),
+                shape = shape,
                 ambientColor = extra.flameStart.copy(alpha = 0.08f),
                 spotColor = extra.flameStart.copy(alpha = 0.10f)
             ),
-        shape = RoundedCornerShape(cornerRadius),
+        shape = shape,
         color = containerColor,
         border = BorderStroke(1.dp, borderColor),
         tonalElevation = 0.dp
     ) {
         Column(
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier
+                .then(if (animateSize) Modifier.smoothContentSize() else Modifier)
+                .padding(contentPadding),
             content = content
         )
     }
@@ -179,8 +205,13 @@ fun WarmHeroCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val extra = LocalMessMateColors.current
-    val shape = RoundedCornerShape(26.dp)
+    val shape = remember { RoundedCornerShape(26.dp) }
     val dotColor = extra.flameStart.copy(alpha = if (extra.isDark) 0.16f else 0.14f)
+    val heroBrush = remember(extra) {
+        Brush.linearGradient(
+            colors = listOf(extra.heroBgTop, extra.surfaceLow, extra.heroBgBottom)
+        )
+    }
 
     Surface(
         modifier = modifier
@@ -198,33 +229,35 @@ fun WarmHeroCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(extra.heroBgTop, extra.surfaceLow, extra.heroBgBottom)
-                    )
-                )
-                .drawBehind {
+                .background(heroBrush)
+                .drawWithCache {
                     val step = 11.dp.toPx()
                     val dotRadius = 1.6.dp.toPx()
                     val startX = size.width * 0.56f
+                    val maxX = size.width - 8.dp.toPx()
                     val endY = size.height * 0.62f
-                    var y = step
-                    while (y < endY) {
-                        var x = startX
-                        while (x < size.width - 8.dp.toPx()) {
-                            drawCircle(
-                                color = dotColor,
-                                radius = dotRadius,
-                                center = Offset(x, y)
-                            )
-                            x += step
+                    val points = buildList {
+                        var y = step
+                        while (y < endY) {
+                            var x = startX
+                            while (x < maxX) {
+                                add(Offset(x, y))
+                                x += step
+                            }
+                            y += step
                         }
-                        y += step
+                    }
+                    onDrawBehind {
+                        for (pt in points) {
+                            drawCircle(color = dotColor, radius = dotRadius, center = pt)
+                        }
                     }
                 }
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier
+                    .smoothContentSize()
+                    .padding(20.dp),
                 content = content
             )
         }
@@ -241,17 +274,18 @@ fun WarmGradientButton(
     gradient: Brush = flamePillBrush()
 ) {
     val extra = LocalMessMateColors.current
-    val shape = RoundedCornerShape(16.dp)
-    val effectiveBrush = if (enabled) {
-        gradient
-    } else {
+    val shape = remember { RoundedCornerShape(16.dp) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val disabledBrush = remember(extra) {
         Brush.horizontalGradient(
             listOf(extra.neutralGrey.copy(alpha = 0.45f), extra.neutralGrey.copy(alpha = 0.45f))
         )
     }
+    val effectiveBrush = if (enabled) gradient else disabledBrush
 
     Box(
         modifier = modifier
+            .pressScaleFeedback(interactionSource = interactionSource, enabled = enabled)
             .heightIn(min = 50.dp)
             .shadow(
                 elevation = if (enabled && !extra.isDark) 6.dp else 0.dp,
@@ -261,7 +295,12 @@ fun WarmGradientButton(
             )
             .clip(shape)
             .background(effectiveBrush)
-            .clickable(enabled = enabled, onClick = onClick)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(color = Color.White),
+                enabled = enabled,
+                onClick = onClick
+            )
             .padding(horizontal = 18.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -300,9 +339,11 @@ fun WarmOutlinedButton(
     contentColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
     val extra = LocalMessMateColors.current
+    val interactionSource = remember { MutableInteractionSource() }
     OutlinedButton(
         onClick = onClick,
         enabled = enabled,
+        interactionSource = interactionSource,
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, extra.borderStrong),
         colors = ButtonDefaults.outlinedButtonColors(
@@ -310,7 +351,9 @@ fun WarmOutlinedButton(
             contentColor = contentColor
         ),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-        modifier = modifier.heightIn(min = 48.dp)
+        modifier = modifier
+            .pressScaleFeedback(interactionSource = interactionSource, enabled = enabled)
+            .heightIn(min = 48.dp)
     ) {
         if (icon != null) {
             Icon(
@@ -341,14 +384,15 @@ fun WarmIconBadge(
     iconSize: Dp = 20.dp,
     cornerRadius: Dp = 14.dp
 ) {
+    val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
     Box(
         modifier = modifier
             .size(size)
-            .clip(RoundedCornerShape(cornerRadius))
+            .clip(shape)
             .background(containerColor)
             .then(
                 if (borderColor != Color.Transparent) {
-                    Modifier.border(1.dp, borderColor, RoundedCornerShape(cornerRadius))
+                    Modifier.border(1.dp, borderColor, shape)
                 } else Modifier
             ),
         contentAlignment = Alignment.Center
@@ -383,13 +427,17 @@ fun WarmTopBar(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (onNavigateBack != null) {
+                val backInteraction = remember { MutableInteractionSource() }
                 Surface(
                     onClick = onNavigateBack,
+                    interactionSource = backInteraction,
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.surface,
                     border = BorderStroke(1.dp, extra.divider),
                     shadowElevation = if (extra.isDark) 0.dp else 1.dp,
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier
+                        .pressScaleFeedback(backInteraction)
+                        .size(44.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -478,13 +526,17 @@ fun WarmActionPill(
     icon: ImageVector? = null
 ) {
     val extra = LocalMessMateColors.current
+    val interactionSource = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
+        interactionSource = interactionSource,
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, extra.divider),
         shadowElevation = if (extra.isDark) 0.dp else 1.dp,
-        modifier = modifier.heightIn(min = 34.dp)
+        modifier = modifier
+            .pressScaleFeedback(interactionSource)
+            .heightIn(min = 34.dp)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -518,10 +570,22 @@ fun StatusPill(
     containerColor: Color = color.copy(alpha = 0.14f),
     icon: ImageVector? = null
 ) {
+    val reducedMotion = LocalReducedMotion.current
+    val animatedBg by animateColorAsState(
+        targetValue = containerColor,
+        animationSpec = MotionSpec.standardTween(reducedMotion),
+        label = "status_pill_bg"
+    )
+    val animatedTextColor by animateColorAsState(
+        targetValue = color,
+        animationSpec = MotionSpec.standardTween(reducedMotion),
+        label = "status_pill_fg"
+    )
+
     Row(
         modifier = modifier
             .clip(CircleShape)
-            .background(containerColor)
+            .background(animatedBg)
             .padding(horizontal = 10.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -530,18 +594,38 @@ fun StatusPill(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = color,
+                tint = animatedTextColor,
                 modifier = Modifier.size(13.dp)
             )
         }
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall,
-            color = color,
-            fontWeight = FontWeight.ExtraBold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        if (reducedMotion) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelSmall,
+                color = animatedTextColor,
+                fontWeight = FontWeight.ExtraBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        } else {
+            AnimatedContent(
+                targetState = text,
+                transitionSpec = {
+                    fadeIn(tween(150, easing = FastOutSlowInEasing)) togetherWith
+                        fadeOut(tween(100, easing = FastOutSlowInEasing))
+                },
+                label = "status_pill_text"
+            ) { label ->
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = animatedTextColor,
+                    fontWeight = FontWeight.ExtraBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
     }
 }
 
@@ -554,7 +638,9 @@ fun WarmSegmentedTabBar(
     modifier: Modifier = Modifier
 ) {
     val extra = LocalMessMateColors.current
+    val reducedMotion = LocalReducedMotion.current
     val scrollState = rememberScrollState()
+    val pillBrush = flamePillBrush()
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -571,14 +657,19 @@ fun WarmSegmentedTabBar(
         ) {
             tabs.forEachIndexed { index, title ->
                 val selected = selectedIndex == index
-                val shape = RoundedCornerShape(14.dp)
+                val shape = remember { RoundedCornerShape(14.dp) }
+                val textColor by animateColorAsState(
+                    targetValue = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                    animationSpec = MotionSpec.fastTween(reducedMotion),
+                    label = "segmented_tab_text"
+                )
                 Box(
                     modifier = Modifier
                         .heightIn(min = 40.dp)
                         .clip(shape)
                         .then(
                             if (selected) {
-                                Modifier.background(flamePillBrush())
+                                Modifier.background(pillBrush)
                             } else {
                                 Modifier.background(Color.Transparent)
                             }
@@ -591,7 +682,7 @@ fun WarmSegmentedTabBar(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.labelMedium,
-                        color = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = textColor,
                         fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Bold,
                         maxLines = 1
                     )
@@ -609,7 +700,13 @@ fun WarmProgressBar(
     barBrush: Brush = flamePillBrush()
 ) {
     val extra = LocalMessMateColors.current
+    val reducedMotion = LocalReducedMotion.current
     val clamped = progress.coerceIn(0f, 1f)
+    val animatedProgress by animateFloatAsState(
+        targetValue = clamped,
+        animationSpec = MotionSpec.emphasisTween(reducedMotion),
+        label = "warm_progress_bar"
+    )
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -619,10 +716,10 @@ fun WarmProgressBar(
             .border(1.dp, extra.divider, CircleShape)
             .padding(2.dp)
     ) {
-        if (clamped > 0f) {
+        if (animatedProgress > 0.001f) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(clamped.coerceAtLeast(0.05f))
+                    .fillMaxWidth(animatedProgress.coerceAtLeast(0.05f))
                     .fillMaxHeight()
                     .clip(CircleShape)
                     .background(barBrush)
@@ -640,10 +737,17 @@ fun CircularFlameProgressRing(
     strokeWidth: Dp = 6.dp
 ) {
     val extra = LocalMessMateColors.current
+    val reducedMotion = LocalReducedMotion.current
     val clamped = progress.coerceIn(0f, 1f)
+    val animatedProgress by animateFloatAsState(
+        targetValue = clamped,
+        animationSpec = MotionSpec.emphasisTween(reducedMotion),
+        label = "circular_flame_progress"
+    )
     val trackColor = extra.surfaceElevated
-    val startColor = extra.flameStart
-    val endColor = extra.flameMid
+    val sweepBrush = remember(extra) {
+        Brush.sweepGradient(colors = listOf(extra.flameStart, extra.flameMid, extra.flameStart))
+    }
 
     Box(
         modifier = modifier.size(size),
@@ -663,13 +767,11 @@ fun CircularFlameProgressRing(
                 size = arcSize,
                 style = Stroke(width = strokePx, cap = StrokeCap.Round)
             )
-            if (clamped > 0f) {
+            if (animatedProgress > 0.001f) {
                 drawArc(
-                    brush = Brush.sweepGradient(
-                        colors = listOf(startColor, endColor, startColor)
-                    ),
+                    brush = sweepBrush,
                     startAngle = -90f,
-                    sweepAngle = 360f * clamped,
+                    sweepAngle = 360f * animatedProgress,
                     useCenter = false,
                     topLeft = topLeft,
                     size = arcSize,
@@ -677,7 +779,7 @@ fun CircularFlameProgressRing(
                 )
             }
         }
-        Text(
+        AnimatedMetricText(
             text = centerLabel,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurface,
@@ -753,15 +855,16 @@ fun CompactStatCard(
     subtitle: String? = null
 ) {
     val extra = LocalMessMateColors.current
+    val shape = remember { RoundedCornerShape(18.dp) }
     Surface(
         modifier = modifier
             .shadow(
                 elevation = if (extra.isDark) 0.dp else 2.dp,
-                shape = RoundedCornerShape(18.dp),
+                shape = shape,
                 ambientColor = extra.flameStart.copy(alpha = 0.06f),
                 spotColor = extra.flameStart.copy(alpha = 0.08f)
             ),
-        shape = RoundedCornerShape(18.dp),
+        shape = shape,
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, extra.divider)
     ) {
@@ -783,13 +886,12 @@ fun CompactStatCard(
                 )
             }
             Spacer(modifier = Modifier.height(6.dp))
-            Text(
+            AnimatedMetricText(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.ExtraBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                maxLines = 1
             )
             if (!subtitle.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(2.dp))

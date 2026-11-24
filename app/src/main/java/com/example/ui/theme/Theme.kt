@@ -10,6 +10,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.example.data.local.ThemeMode
+import com.example.ui.components.LocalReducedMotion
+import com.example.ui.components.rememberSystemReducedMotion
 
 @Immutable
 data class MessMateExtraColors(
@@ -179,8 +181,12 @@ fun MessMateTheme(
 
     val colorScheme = if (useDark) DarkColorScheme else LightColorScheme
     val extraColors = if (useDark) DarkExtraColors else LightExtraColors
+    val reducedMotion = rememberSystemReducedMotion()
 
-    CompositionLocalProvider(LocalMessMateColors provides extraColors) {
+    CompositionLocalProvider(
+        LocalMessMateColors provides extraColors,
+        LocalReducedMotion provides reducedMotion
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = MessMateTypography,

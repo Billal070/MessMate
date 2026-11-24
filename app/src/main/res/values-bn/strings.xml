@@ -223,11 +223,13 @@
     <string name="records_monthly_report_title">মাসিক পিডিএফ রিপোর্ট</string>
     <string name="records_generate_pdf">পিডিএফ রিপোর্ট তৈরি করুন</string>
     <string name="records_preview_pdf">প্রিভিউ</string>
+    <string name="records_open_pdf">পিডিএফ খুলুন</string>
     <string name="records_save_pdf">ডিভাইসে সংরক্ষণ</string>
     <string name="records_share_pdf">শেয়ার</string>
     <string name="records_pdf_ready">পিডিএফ প্রস্তুত: %1$s</string>
     <string name="records_pdf_saved">পিডিএফ সফলভাবে সংরক্ষিত হয়েছে।</string>
     <string name="records_pdf_error">পিডিএফ তৈরি বা সংরক্ষণ করা যায়নি।</string>
+    <string name="records_no_pdf_viewer">এই ডিভাইসে কোনো পিডিএফ রিডার অ্যাপ পাওয়া যায়নি।</string>
     <string name="records_pdf_preview_title">পিডিএফ রিপোর্ট প্রিভিউ</string>
     <string name="records_page_indicator">পৃষ্ঠা %1$d / %2$d</string>
 

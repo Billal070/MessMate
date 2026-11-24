@@ -1,5 +1,13 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,7 +67,9 @@ import com.example.data.local.RiceTransactionEntity
 import com.example.data.local.RiceTransactionType
 import com.example.data.local.StudySessionEntity
 import com.example.ui.components.ConfirmDeleteDialog
+import com.example.ui.components.LocalReducedMotion
 import com.example.ui.components.MessCard
+import com.example.ui.components.MotionSpec
 import com.example.ui.components.StatusPill
 import com.example.ui.components.WarmActionPill
 import com.example.ui.components.WarmIconBadge
@@ -89,18 +99,16 @@ fun CombinedCalendarScreen(
     val selectedMonth by calendarViewModel.selectedMonth.collectAsStateWithLifecycle()
     val markersMap by calendarViewModel.calendarMarkers.collectAsStateWithLifecycle()
     val extraColors = LocalMessMateColors.current
+    val reducedMotion = LocalReducedMotion.current
     val today = calendarViewModel.timeProvider.today()
     val canGoNextMonth = calendarViewModel.canNavigateNextMonth(selectedMonth)
 
-    val daysOfWeek = listOf(
-        DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY,
-        DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY
-    )
-
-    val firstOfMonth = selectedMonth.atDay(1)
-    val leadingBlanks = firstOfMonth.dayOfWeek.value % 7
-    val totalDays = selectedMonth.lengthOfMonth()
-    val totalCells = ((leadingBlanks + totalDays + 6) / 7) * 7
+    val daysOfWeek = remember {
+        listOf(
+            DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY,
+            DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -143,12 +151,29 @@ fun CombinedCalendarScreen(
                             }
                         }
 
-                        Text(
-                            text = Formatters.formatMonthYear(selectedMonth, locale),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.ExtraBold
-                        )
+                        AnimatedContent(
+                            targetState = selectedMonth,
+                            transitionSpec = {
+                                val dur = MotionSpec.duration(180, reducedMotion)
+                                val dir = if (targetState.isAfter(initialState)) 1 else -1
+                                if (reducedMotion) {
+                                    fadeIn(tween(0)) togetherWith fadeOut(tween(0))
+                                } else {
+                                    (fadeIn(tween(dur, easing = FastOutSlowInEasing)) +
+                                        slideInHorizontally(tween(dur, easing = FastOutSlowInEasing)) { dir * (it / 4) }) togetherWith
+                                        (fadeOut(tween(MotionSpec.duration(120, reducedMotion), easing = FastOutSlowInEasing)) +
+                                            slideOutHorizontally(tween(dur, easing = FastOutSlowInEasing)) { -dir * (it / 4) })
+                                }
+                            },
+                            label = "calendar_month_title"
+                        ) { month ->
+                            Text(
+                                text = Formatters.formatMonthYear(month, locale),
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
 
                         Surface(
                             onClick = { if (canGoNextMonth) calendarViewModel.nextMonth() },
@@ -195,33 +220,54 @@ fun CombinedCalendarScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Calendar Grid
-                    val rows = totalCells / 7
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        for (row in 0 until rows) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
-                            ) {
-                                for (col in 0 until 7) {
-                                    val cellIndex = row * 7 + col
-                                    val dayNumber = cellIndex - leadingBlanks + 1
-                                    if (dayNumber in 1..totalDays) {
-                                        val date = selectedMonth.atDay(dayNumber)
-                                        val isFutureDate = date.isAfter(today)
-                                        val markers = markersMap[date] ?: CalendarDayMarkers(date)
-                                        CalendarDayCell(
-                                            dayNumber = dayNumber,
-                                            isToday = date == today,
-                                            isFuture = isFutureDate,
-                                            markers = markers,
-                                            onClick = { if (!isFutureDate) onSelectDate(date) },
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .testTag("calendar_day_${date}")
-                                        )
-                                    } else {
-                                        Spacer(modifier = Modifier.weight(1f))
+                    // Calendar Grid with smooth directional month slide + fade transition
+                    AnimatedContent(
+                        targetState = selectedMonth,
+                        transitionSpec = {
+                            val dur = MotionSpec.duration(200, reducedMotion)
+                            val dir = if (targetState.isAfter(initialState)) 1 else -1
+                            if (reducedMotion) {
+                                fadeIn(tween(0)) togetherWith fadeOut(tween(0))
+                            } else {
+                                (fadeIn(tween(dur, easing = FastOutSlowInEasing)) +
+                                    slideInHorizontally(tween(dur, easing = FastOutSlowInEasing)) { dir * (it / 8) }) togetherWith
+                                    (fadeOut(tween(MotionSpec.duration(140, reducedMotion), easing = FastOutSlowInEasing)) +
+                                        slideOutHorizontally(tween(dur, easing = FastOutSlowInEasing)) { -dir * (it / 8) })
+                            }
+                        },
+                        label = "calendar_month_grid"
+                    ) { month ->
+                        val firstOfMonth = remember(month) { month.atDay(1) }
+                        val leadingBlanks = remember(firstOfMonth) { firstOfMonth.dayOfWeek.value % 7 }
+                        val totalDays = remember(month) { month.lengthOfMonth() }
+                        val rows = remember(leadingBlanks, totalDays) { ((leadingBlanks + totalDays + 6) / 7) }
+
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            for (row in 0 until rows) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    for (col in 0 until 7) {
+                                        val cellIndex = row * 7 + col
+                                        val dayNumber = cellIndex - leadingBlanks + 1
+                                        if (dayNumber in 1..totalDays) {
+                                            val date = month.atDay(dayNumber)
+                                            val isFutureDate = date.isAfter(today)
+                                            val markers = markersMap[date] ?: CalendarDayMarkers(date)
+                                            CalendarDayCell(
+                                                dayNumber = dayNumber,
+                                                isToday = date == today,
+                                                isFuture = isFutureDate,
+                                                markers = markers,
+                                                onClick = { if (!isFutureDate) onSelectDate(date) },
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .testTag("calendar_day_${date}")
+                                            )
+                                        } else {
+                                            Spacer(modifier = Modifier.weight(1f))
+                                        }
                                     }
                                 }
                             }

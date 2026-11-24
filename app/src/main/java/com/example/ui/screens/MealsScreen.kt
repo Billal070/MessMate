@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,7 +52,9 @@ import com.example.data.local.DeadlineWindow
 import com.example.data.local.MealRecordEntity
 import com.example.data.local.MealStatus
 import com.example.data.local.MealType
+import com.example.ui.components.LocalReducedMotion
 import com.example.ui.components.MessCard
+import com.example.ui.components.MotionSpec
 import com.example.ui.components.SectionHeader
 import com.example.ui.components.StatusPill
 import com.example.ui.components.WarmActionPill
@@ -83,12 +87,13 @@ fun MealsScreen(
     val lastToggleResult by viewModel.lastMealToggleResult.collectAsStateWithLifecycle()
 
     val extraColors = LocalMessMateColors.current
+    val reducedMotion = LocalReducedMotion.current
     val today = viewModel.todayDate
     val yesterday = today.minusDays(1)
     val tomorrow = today.plusDays(1)
     val deadlineDecision = viewModel.currentDeadlineDecision()
 
-    val cyclesByStart = allCycles.associateBy { it.startDateIso }
+    val cyclesByStart = remember(allCycles) { allCycles.associateBy { it.startDateIso } }
     val activeDayCycle = cyclesByStart[yesterday.toString()]
     val upcomingDinnerCycle = cyclesByStart[today.toString()]
     val nextDayCycle = cyclesByStart[tomorrow.toString()]
@@ -213,8 +218,13 @@ fun MealsScreen(
         // Meal ON/OFF Master Control Card
         item {
             val isOn = appSettings.mealGlobalOn
+            val heroBorderColor by animateColorAsState(
+                targetValue = if (isOn) extraColors.success.copy(alpha = 0.4f) else extraColors.danger.copy(alpha = 0.45f),
+                animationSpec = MotionSpec.standardTween(reducedMotion),
+                label = "meal_master_border"
+            )
             WarmHeroCard(
-                borderColor = if (isOn) extraColors.success.copy(alpha = 0.4f) else extraColors.danger.copy(alpha = 0.45f)
+                borderColor = heroBorderColor
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

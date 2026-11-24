@@ -10,6 +10,12 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -36,7 +42,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.local.AppLanguage
 import com.example.data.local.ThemeMode
+import com.example.ui.components.LocalReducedMotion
 import com.example.ui.components.MessMateLogo
+import com.example.ui.components.MotionSpec
 import com.example.ui.navigation.MessMateAppRoot
 import com.example.ui.theme.MessMateTheme
 import com.example.ui.viewmodel.CalendarRecordsViewModel
@@ -60,6 +68,10 @@ class MainActivity : ComponentActivity() {
     private val calendarViewModel: CalendarRecordsViewModel by viewModels {
         CalendarRecordsViewModel.Factory(appContainer)
     }
+
+    // Avoid firing a redundant reconcileNow() immediately after MessMateViewModel.init on cold launch;
+    // subsequent resumes (returning from background / across meal cutoffs) still reconcile immediately.
+    private var skipInitialResumeReconcile = true
 
     override fun attachBaseContext(newBase: Context) {
         val savedLanguage = LocaleHelper.getSavedLanguageSync(newBase)
@@ -106,42 +118,55 @@ class MainActivity : ComponentActivity() {
                 LocalConfiguration provides localizedWrapper.resources.configuration
             ) {
                 MessMateTheme(themeMode = themeMode) {
-                    val loadedPrefs = preferencesOrNull
-                    if (loadedPrefs == null) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.background),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
+                    val reducedMotion = LocalReducedMotion.current
+                    val fadeDuration = MotionSpec.duration(180, reducedMotion)
+                    val isPrefsLoaded = preferencesOrNull != null
+
+                    AnimatedContent(
+                        targetState = isPrefsLoaded,
+                        transitionSpec = {
+                            fadeIn(tween(fadeDuration, easing = FastOutSlowInEasing)) togetherWith
+                                fadeOut(tween(MotionSpec.duration(120, reducedMotion), easing = FastOutSlowInEasing))
+                        },
+                        label = "startup_splash_to_app"
+                    ) { loaded ->
+                        val loadedPrefs = preferencesOrNull
+                        if (!loaded || loadedPrefs == null) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(MaterialTheme.colorScheme.background),
+                                contentAlignment = Alignment.Center
                             ) {
-                                MessMateLogo(size = 104.dp)
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = stringResource(R.string.app_name),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.ExtraBold
-                                )
-                                Spacer(modifier = Modifier.height(20.dp))
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(28.dp),
-                                    strokeWidth = 3.dp,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    MessMateLogo(size = 104.dp)
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = stringResource(R.string.app_name),
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.ExtraBold
+                                    )
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(28.dp),
+                                        strokeWidth = 3.dp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                             }
+                        } else {
+                            MessMateAppRoot(
+                                setupCompleted = loadedPrefs.setupCompleted,
+                                currentLanguage = loadedPrefs.language,
+                                messViewModel = messViewModel,
+                                studyViewModel = studyViewModel,
+                                calendarViewModel = calendarViewModel
+                            )
                         }
-                    } else {
-                        MessMateAppRoot(
-                            setupCompleted = loadedPrefs.setupCompleted,
-                            currentLanguage = loadedPrefs.language,
-                            messViewModel = messViewModel,
-                            studyViewModel = studyViewModel,
-                            calendarViewModel = calendarViewModel
-                        )
                     }
                 }
             }
@@ -150,6 +175,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        messViewModel.reconcileNow()
+        if (skipInitialResumeReconcile) {
+            skipInitialResumeReconcile = false
+        } else {
+            messViewModel.reconcileNow()
+        }
     }
 }

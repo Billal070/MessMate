@@ -1,5 +1,15 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +58,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -75,6 +86,8 @@ import com.example.data.local.SubjectEntity
 import com.example.ui.components.CompactStatCard
 import com.example.ui.components.ConfirmDeleteDialog
 import com.example.ui.components.EmptyStateBox
+import com.example.ui.components.LocalReducedMotion
+import com.example.ui.components.MotionSpec
 import com.example.ui.components.StatusPill
 import com.example.ui.components.WarmGradientButton
 import com.example.ui.components.WarmHeroCard
@@ -101,7 +114,13 @@ fun StudyScreen(
     val stats by studyViewModel.currentMonthStats.collectAsStateWithLifecycle()
     val pomodoro by studyViewModel.pomodoro.collectAsStateWithLifecycle()
     val stopwatch by studyViewModel.stopwatch.collectAsStateWithLifecycle()
+    val studySettings by studyViewModel.studySettings.collectAsStateWithLifecycle()
     val extraColors = LocalMessMateColors.current
+    val reducedMotion = LocalReducedMotion.current
+
+    LaunchedEffect(studySettings) {
+        studyViewModel.syncPomodoroSettingsIfIdle(studySettings)
+    }
 
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     val tabs = listOf(
@@ -281,27 +300,45 @@ fun StudyScreen(
             )
         }
 
-        when (selectedTab) {
-            0 -> PomodoroTab(
-                studyViewModel = studyViewModel,
-                subjects = dropdownSubjects,
-                fallbackSubjectName = fallbackSubjectName
-            )
-            1 -> StopwatchTab(
-                studyViewModel = studyViewModel,
-                subjects = dropdownSubjects
-            )
-            2 -> SubjectsTab(
-                studyViewModel = studyViewModel,
-                subjects = subjects,
-                defaultSemester = profile?.semester?.takeIf { it.isNotBlank() } ?: PresetCatalog.SEMESTERS.first(),
-                defaultTechnology = profile?.department?.takeIf { it.isNotBlank() } ?: PresetCatalog.SUPPORTED_TECHNOLOGIES.first()
-            )
-            3 -> StudyHistoryTab(
-                studyViewModel = studyViewModel,
-                sessions = sessions,
-                stats = stats
-            )
+        AnimatedContent(
+            targetState = selectedTab,
+            modifier = Modifier.weight(1f),
+            transitionSpec = {
+                val dur = MotionSpec.duration(180, reducedMotion)
+                val dir = if (targetState >= initialState) 1 else -1
+                if (reducedMotion) {
+                    fadeIn(tween(0)) togetherWith fadeOut(tween(0))
+                } else {
+                    (fadeIn(tween(dur, easing = FastOutSlowInEasing)) +
+                        slideInHorizontally(tween(dur, easing = FastOutSlowInEasing)) { dir * (it / 16) }) togetherWith
+                        (fadeOut(tween(MotionSpec.duration(120, reducedMotion), easing = FastOutSlowInEasing)) +
+                            slideOutHorizontally(tween(dur, easing = FastOutSlowInEasing)) { -dir * (it / 16) })
+                }
+            },
+            label = "study_tab_transition"
+        ) { tab ->
+            when (tab) {
+                0 -> PomodoroTab(
+                    studyViewModel = studyViewModel,
+                    subjects = dropdownSubjects,
+                    fallbackSubjectName = fallbackSubjectName
+                )
+                1 -> StopwatchTab(
+                    studyViewModel = studyViewModel,
+                    subjects = dropdownSubjects
+                )
+                2 -> SubjectsTab(
+                    studyViewModel = studyViewModel,
+                    subjects = subjects,
+                    defaultSemester = profile?.semester?.takeIf { it.isNotBlank() } ?: PresetCatalog.SEMESTERS.first(),
+                    defaultTechnology = profile?.department?.takeIf { it.isNotBlank() } ?: PresetCatalog.SUPPORTED_TECHNOLOGIES.first()
+                )
+                3 -> StudyHistoryTab(
+                    studyViewModel = studyViewModel,
+                    sessions = sessions,
+                    stats = stats
+                )
+            }
         }
     }
 }
@@ -405,6 +442,18 @@ private fun PomodoroTab(
         PomodoroMode.LONG_BREAK -> extraColors.amberContainer
     }
 
+    val reducedMotion = LocalReducedMotion.current
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = MotionSpec.standardTween(reducedMotion),
+        label = "pomodoro_progress_arc"
+    )
+    val animatedModeColor by animateColorAsState(
+        targetValue = modeColor,
+        animationSpec = MotionSpec.standardTween(reducedMotion),
+        label = "pomodoro_mode_color"
+    )
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -454,7 +503,7 @@ private fun PomodoroTab(
                 ) {
                     StatusPill(
                         text = modeLabel,
-                        color = modeColor,
+                        color = animatedModeColor,
                         containerColor = modeContainer,
                         icon = Icons.Default.Timer
                     )
@@ -471,9 +520,9 @@ private fun PomodoroTab(
                             border = BorderStroke(1.dp, extraColors.divider)
                         ) {}
                         CircularProgressIndicator(
-                            progress = { progress },
+                            progress = { animatedProgress },
                             modifier = Modifier.fillMaxSize(),
-                            color = modeColor,
+                            color = animatedModeColor,
                             trackColor = extraColors.surfaceElevated,
                             strokeWidth = 12.dp,
                             strokeCap = StrokeCap.Round

@@ -223,11 +223,13 @@
     <string name="records_monthly_report_title">Monthly PDF Report</string>
     <string name="records_generate_pdf">Generate PDF Report</string>
     <string name="records_preview_pdf">Preview</string>
+    <string name="records_open_pdf">Open PDF</string>
     <string name="records_save_pdf">Save to Device</string>
     <string name="records_share_pdf">Share</string>
     <string name="records_pdf_ready">PDF ready: %1$s</string>
     <string name="records_pdf_saved">PDF saved successfully.</string>
     <string name="records_pdf_error">Could not generate or save PDF.</string>
+    <string name="records_no_pdf_viewer">No PDF reader app found on this device.</string>
     <string name="records_pdf_preview_title">PDF Report Preview</string>
     <string name="records_page_indicator">Page %1$d of %2$d</string>
 
